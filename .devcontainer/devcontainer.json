@@ -1,0 +1,29 @@
+{
+    "name": "slint",
+    "dockerComposeFile": "compose.yaml",
+    "service": "ruby-app",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "mounts": ["type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly"],
+
+    "containerEnv": {
+        "HOME": "/home/vscode"
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "Shopify.ruby-extensions-pack",
+                "Slint.slint"
+            ]
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/rust:1": {},
+        "ghcr.io/devcontainers/features/desktop-lite": {}
+    },
+    "portsAttributes": {
+        "6080": {
+            "label": "noVNC"
+        }
+    }
+}

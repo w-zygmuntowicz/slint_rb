@@ -1,0 +1,19 @@
+[package]
+name = "slint_rb"
+version = "0.1.0"
+edition = "2021"
+authors = ["Wojciech Zygmuntowicz <wzygmuntowicz.zygmuntowicz@gmail.com>"]
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+i-slint-backend-selector = "1.8.0"
+i-slint-compiler = "1.8.0"
+i-slint-core = "1.8.0"
+magnus = { version = "0.6.2" }
+slint = "1.8.0"
+slint-interpreter = "1.8.0"
+spin_on = "0.1.1"
