@@ -1,6 +1,6 @@
 use slint_interpreter::{CompilationResult, Compiler, ComponentHandle};
-use std::{path, thread};
-use std::sync::mpsc::{self, sync_channel, SyncSender};
+use std::thread;
+use std::sync::mpsc;
 
 struct ActorState {
     compiler: Compiler,
@@ -14,7 +14,7 @@ enum Message {
 
 #[magnus::wrap(class = "Slint::Compiler")]
 pub struct CompilerWrapper {
-    channel: SyncSender<Message>,
+    channel: mpsc::SyncSender<Message>,
 }
 
 impl Default for CompilerWrapper {
@@ -74,7 +74,7 @@ impl CompilerWrapper {
 
 #[magnus::wrap(class = "Slint::CompilationResult")]
 pub struct CompilationResultWrapper {
-    channel: SyncSender<Message>,
+    channel: mpsc::SyncSender<Message>,
     handle: usize
 }
 
