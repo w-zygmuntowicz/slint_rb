@@ -1,9 +1,9 @@
-use slint_interpreter::{CompilationResult, Compiler, ComponentHandle};
+use slint_interpreter::{CompilationResult, ComponentHandle};
 use std::{thread};
 use std::sync::mpsc;
 
 struct ActorState {
-    compiler: Compiler,
+    compiler: slint_interpreter::Compiler,
     compilation_results: Vec<CompilationResult>
 }
 
@@ -12,17 +12,17 @@ enum Message {
 }
 
 #[magnus::wrap(class = "Slint::Compiler")]
-pub struct CompilerWrapper {
+pub struct Compiler {
     channel: mpsc::SyncSender<Message>,
 }
 
-impl Default for CompilerWrapper {
+impl Default for Compiler {
     fn default() -> Self {
         let (channel, recv) = mpsc::sync_channel(0);
 
         thread::spawn(move || {
             let state = ActorState {
-                compiler: Compiler::default(),
+                compiler: slint_interpreter::Compiler::default(),
                 compilation_results: Vec::new()
             };
             actor_loop(state, recv);
@@ -42,7 +42,7 @@ fn actor_loop(mut state: ActorState, recv: mpsc::Receiver<Message>) {
     }
 }
 
-impl CompilerWrapper {
+impl Compiler {
     pub fn new() -> Self {
         Self::default()
     }
