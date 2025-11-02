@@ -1,4 +1,5 @@
 use slint_interpreter::{ComponentHandle};
+use std::path::PathBuf;
 use std::{thread};
 use std::sync::mpsc;
 use std::collections::HashMap;
@@ -69,6 +70,39 @@ impl Compiler {
             channel: self.channel.clone(),
             handle
         }
+    }
+
+    pub fn include_paths(&self) -> Vec<String> {
+        let (send, recv) = mpsc::sync_channel(0);
+
+        let evolution = move |state: &mut ActorState| {
+            let paths = state.compiler
+                             .include_paths()
+                             .iter()
+                             .map(|p| p.to_str().unwrap_or_default().to_string())
+                             .collect();
+            
+            send.send(paths).unwrap();
+        };
+
+        let message = Message::Evolution(Box::new(evolution));
+        self.channel.send(message).unwrap();
+
+        recv.recv().unwrap()
+    }
+
+    pub fn set_include_paths(&self, include_paths: Vec<PathBuf>) {
+        let (send, recv) = mpsc::sync_channel(0);
+
+        let evolution = move |state: &mut ActorState| {
+            state.compiler.set_include_paths(include_paths.clone());
+
+            send.send(()).unwrap();
+        };
+        let message = Message::Evolution(Box::new(evolution));
+        self.channel.send(message).unwrap();
+
+        recv.recv().unwrap();
     }
 }
 
