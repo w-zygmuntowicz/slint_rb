@@ -1,10 +1,10 @@
-use slint_interpreter::{CompilationResult, ComponentHandle};
+use slint_interpreter::{ComponentHandle};
 use std::{thread};
 use std::sync::mpsc;
 
 struct ActorState {
     compiler: slint_interpreter::Compiler,
-    compilation_results: Vec<CompilationResult>
+    compilation_results: Vec<slint_interpreter::CompilationResult>
 }
 
 enum Message {
@@ -47,7 +47,7 @@ impl Compiler {
         Self::default()
     }
 
-    pub fn build_from_path(&self, path: String) -> CompilationResultWrapper {
+    pub fn build_from_path(&self, path: String) -> CompilationResult {
         let (send, recv) = mpsc::sync_channel(0);
         
         let evolution = move |state: &mut ActorState| {
@@ -61,7 +61,7 @@ impl Compiler {
         self.channel.send(message).unwrap();
         
         let handle = recv.recv().unwrap();
-        CompilationResultWrapper {
+        CompilationResult {
             channel: self.channel.clone(),
             handle
         }
@@ -70,18 +70,18 @@ impl Compiler {
 
 
 #[magnus::wrap(class = "Slint::CompilationResult")]
-pub struct CompilationResultWrapper {
+pub struct CompilationResult {
     channel: mpsc::SyncSender<Message>,
     handle: usize
 }
 
-impl CompilationResultWrapper {
+impl CompilationResult {
     pub fn render(&self) {
         let (send, recv) = mpsc::sync_channel(0);
         
         let index = self.handle.clone();
         let evolution = move |state: &mut ActorState| {
-            let compilation_result: &CompilationResult = state.compilation_results.get(index).unwrap();
+            let compilation_result = state.compilation_results.get(index).unwrap();
 
             if let Some(definition) = compilation_result.component("HelloWorld") {
                 let instance = definition.create().unwrap();
