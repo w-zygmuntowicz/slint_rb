@@ -1,10 +1,12 @@
 use slint_interpreter::{ComponentHandle};
 use std::{thread};
 use std::sync::mpsc;
+use std::collections::HashMap;
 
 struct ActorState {
     compiler: slint_interpreter::Compiler,
-    compilation_results: Vec<slint_interpreter::CompilationResult>
+    compilation_results: HashMap<usize, slint_interpreter::CompilationResult>,
+    next_compilation_result_id: usize
 }
 
 enum Message {
@@ -23,7 +25,8 @@ impl Default for Compiler {
         thread::spawn(move || {
             let state = ActorState {
                 compiler: slint_interpreter::Compiler::default(),
-                compilation_results: Vec::new()
+                compilation_results: HashMap::new(),
+                next_compilation_result_id:  0
             };
             actor_loop(state, recv);
         });
@@ -52,8 +55,9 @@ impl Compiler {
         
         let evolution = move |state: &mut ActorState| {
             let compilation_result = spin_on::spin_on(state.compiler.build_from_path(path.clone()));
-            state.compilation_results.push(compilation_result);
-            let handle = state.compilation_results.len() - 1;
+            let handle = state.next_compilation_result_id;
+            state.compilation_results.insert(handle, compilation_result);
+            state.next_compilation_result_id += 1;
             send.send(handle).unwrap();
         };
 
@@ -81,7 +85,7 @@ impl CompilationResult {
         
         let index = self.handle.clone();
         let evolution = move |state: &mut ActorState| {
-            let compilation_result = state.compilation_results.get(index).unwrap();
+            let compilation_result = state.compilation_results.get(&index).unwrap();
 
             if let Some(definition) = compilation_result.component("HelloWorld") {
                 let instance = definition.create().unwrap();
@@ -90,6 +94,22 @@ impl CompilationResult {
             }
         };
 
+        let message = Message::Evolution(Box::new(evolution));
+        self.channel.send(message).unwrap();
+
+        recv.recv().unwrap()
+    }
+}
+
+impl Drop for CompilationResult {
+    fn drop(&mut self) {
+        let (send, recv) = mpsc::sync_channel(0);
+
+        let index = self.handle.clone();
+        let evolution = move |state: &mut ActorState| {
+            state.compilation_results.remove(&index);
+            send.send(()).unwrap();
+        };
         let message = Message::Evolution(Box::new(evolution));
         self.channel.send(message).unwrap();
 
