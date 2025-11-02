@@ -1,5 +1,5 @@
 use slint_interpreter::{CompilationResult, Compiler, ComponentHandle};
-use std::thread;
+use std::{thread};
 use std::sync::mpsc;
 
 struct ActorState {
@@ -8,8 +8,7 @@ struct ActorState {
 }
 
 enum Message {
-    BuildPath(String, mpsc::SyncSender<usize>),
-    Render(usize, mpsc::SyncSender<()>)
+    Evolution(Box<dyn Fn(&mut ActorState) -> () + Send>)
 }
 
 #[magnus::wrap(class = "Slint::Compiler")]
@@ -36,19 +35,8 @@ impl Default for CompilerWrapper {
 fn actor_loop(mut state: ActorState, recv: mpsc::Receiver<Message>) {
     while let Ok(msg) = recv.recv() {
         match msg {
-            Message::BuildPath(path, reply_sender) => {
-                let compilation_result = spin_on::spin_on(state.compiler.build_from_path(path));
-                state.compilation_results.push(compilation_result);
-                let handle = state.compilation_results.len() - 1;
-                reply_sender.send(handle).unwrap();
-            }
-            Message::Render(handle, reply_sender) => {
-                let compilation_result = state.compilation_results.get(handle).unwrap();
-                if let Some(definition) = compilation_result.component("HelloWorld") {
-                    let instance = definition.create().unwrap();
-                    instance.run().unwrap();
-                    reply_sender.send(()).unwrap();
-                }
+            Message::Evolution(boxed_closure) => {
+                (&boxed_closure)(&mut state);
             }
         }
     }
@@ -61,9 +49,18 @@ impl CompilerWrapper {
 
     pub fn build_from_path(&self, path: String) -> CompilationResultWrapper {
         let (send, recv) = mpsc::sync_channel(0);
-        self.channel.send(Message::BuildPath(path, send)).unwrap();
-        let handle = recv.recv().unwrap();
         
+        let evolution = move |state: &mut ActorState| {
+            let compilation_result = spin_on::spin_on(state.compiler.build_from_path(path.clone()));
+            state.compilation_results.push(compilation_result);
+            let handle = state.compilation_results.len() - 1;
+            send.send(handle).unwrap();
+        };
+
+        let message = Message::Evolution(Box::new(evolution));
+        self.channel.send(message).unwrap();
+        
+        let handle = recv.recv().unwrap();
         CompilationResultWrapper {
             channel: self.channel.clone(),
             handle
@@ -81,7 +78,19 @@ pub struct CompilationResultWrapper {
 impl CompilationResultWrapper {
     pub fn render(&self) {
         let (send, recv) = mpsc::sync_channel(0);
-        let message = Message::Render(self.handle, send);
+        
+        let index = self.handle.clone();
+        let evolution = move |state: &mut ActorState| {
+            let compilation_result: &CompilationResult = state.compilation_results.get(index).unwrap();
+
+            if let Some(definition) = compilation_result.component("HelloWorld") {
+                let instance = definition.create().unwrap();
+                instance.run().unwrap();
+                send.send(()).unwrap();
+            }
+        };
+
+        let message = Message::Evolution(Box::new(evolution));
         self.channel.send(message).unwrap();
 
         recv.recv().unwrap()

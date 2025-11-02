@@ -7,7 +7,7 @@ class TestSlint < Minitest::Test
     path = "test/ui/app-window.slint"
     compiler = Slint::Compiler.new
     compilation_result = compiler.build_from_path(path)
-    compilation_result.render
     binding.irb
+    compilation_result.render
   end
 end
