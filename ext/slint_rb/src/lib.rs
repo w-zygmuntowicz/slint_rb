@@ -11,6 +11,8 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     wrapper.define_method("build_from_path", method!(compiler::Compiler::build_from_path, 1))?;
     wrapper.define_method("include_paths", method!(compiler::Compiler::include_paths, 0))?;
     wrapper.define_method("include_paths=", method!(compiler::Compiler::set_include_paths, 1))?;
+    wrapper.define_method("library_paths", method!(compiler::Compiler::library_paths, 0))?;
+    wrapper.define_method("library_paths=", method!(compiler::Compiler::set_library_paths, 1))?;
 
     let compilation_result = module.define_class("CompilationResult", ruby.class_object())?;
     compilation_result.define_method("render", method!(compiler::CompilationResult::render, 0))?;

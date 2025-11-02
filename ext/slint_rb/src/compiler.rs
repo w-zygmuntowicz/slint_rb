@@ -104,6 +104,38 @@ impl Compiler {
 
         recv.recv().unwrap();
     }
+
+    pub fn library_paths(&self) -> HashMap<String, PathBuf> {
+        let (send, recv) = mpsc::sync_channel(0);
+
+        let evolution = move |state: &mut ActorState| {
+            let mut paths = HashMap::new();
+
+            for (key, path) in state.compiler.library_paths() {
+                paths.insert(key.clone(), path.clone());
+            }
+
+            send.send(paths).unwrap();
+        };
+        let message = Message::Evolution(Box::new(evolution));
+        self.channel.send(message).unwrap();
+
+        recv.recv().unwrap()
+    }
+
+    pub fn set_library_paths(&self, library_paths: HashMap<String, PathBuf>) {
+        let (send, recv) = mpsc::sync_channel(0);
+
+        let evolution = move |state: &mut ActorState| {
+            state.compiler.set_library_paths(library_paths.clone());
+
+            send.send(()).unwrap();
+        };
+        let message = Message::Evolution(Box::new(evolution));
+        self.channel.send(message).unwrap();
+
+        recv.recv().unwrap();
+    }
 }
 
 
