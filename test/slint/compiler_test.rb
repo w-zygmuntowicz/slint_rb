@@ -43,5 +43,21 @@ module Slint
       compiler.style = "material"
       assert_equal("material", compiler.style)
     end
+
+    def test_build_from_path
+      compiler = Compiler.new
+
+      compilation_result = compiler.build_from_path("test/ui/app-window.slint")
+
+      assert_instance_of(CompilationResult, compilation_result)
+    end
+
+    def test_build_from_source
+      compiler = Compiler.new
+
+      compilation_result = compiler.build_from_source("export component App {}", "")
+
+      assert_instance_of(CompilationResult, compilation_result)
+    end
   end
 end

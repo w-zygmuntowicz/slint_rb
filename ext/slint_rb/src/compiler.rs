@@ -99,6 +99,18 @@ impl Compiler {
         }
     }
 
+    pub fn build_from_source(&self, source: String, path: PathBuf) -> CompilationResult {
+        let handle = self.actor.apply(move |state| {
+            let compilation_result = spin_on::spin_on(state.compiler.build_from_source(source.clone(), path.clone()));
+            let handle = state.next_compilation_result_id;
+            state.compilation_results.insert(handle, compilation_result);
+            state.next_compilation_result_id += 1;
+            handle
+        });
+
+        CompilationResult { actor: Arc::clone(&self.actor), handle }
+    }
+
     pub fn include_paths(&self) -> Vec<String> {
         self.actor.apply(move |state: &mut ActorState| {
             state.compiler
