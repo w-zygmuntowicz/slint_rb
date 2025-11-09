@@ -17,7 +17,8 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     compiler_class.define_method("style", method!(compiler::Compiler::style, 0))?;
     compiler_class.define_method("style=", method!(compiler::Compiler::set_style, 1))?;
 
-    let compilation_result = module.define_class("CompilationResult", ruby.class_object())?;
-    compilation_result.define_method("render", method!(compiler::CompilationResult::render, 0))?;
+    let compilation_result_class = module.define_class("CompilationResult", ruby.class_object())?;
+    compilation_result_class.define_method("render", method!(compiler::CompilationResult::render, 0))?;
+    compilation_result_class.define_method("valid?", method!(compiler::CompilationResult::valid, 0))?;
     Ok(())
 }

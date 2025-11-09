@@ -50,6 +50,7 @@ module Slint
       compilation_result = compiler.build_from_path("test/ui/app-window.slint")
 
       assert_instance_of(CompilationResult, compilation_result)
+      assert(compilation_result.valid?)
     end
 
     def test_build_from_source
@@ -58,6 +59,7 @@ module Slint
       compilation_result = compiler.build_from_source("export component App {}", "")
 
       assert_instance_of(CompilationResult, compilation_result)
+      assert(compilation_result.valid?)
     end
   end
 end

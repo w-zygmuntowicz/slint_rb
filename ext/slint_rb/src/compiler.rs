@@ -170,6 +170,16 @@ impl CompilationResult {
             }
         })
     }
+
+    pub fn valid(&self) -> bool {
+        let index = self.handle.clone();
+
+        self.actor.apply(move |state| {
+            let compilation_result = state.compilation_results.get(&index).unwrap();
+
+            !compilation_result.has_errors()
+        })
+    }
 }
 
 impl Drop for CompilationResult {
