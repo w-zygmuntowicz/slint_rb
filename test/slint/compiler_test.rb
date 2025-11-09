@@ -56,7 +56,7 @@ module Slint
     def test_build_from_source
       compiler = Compiler.new
 
-      compilation_result = compiler.build_from_source("export component App {}", "")
+      compilation_result = compiler.build_from_source("export component App inherits Window {}", "")
 
       assert_instance_of(CompilationResult, compilation_result)
       assert(compilation_result.valid?)

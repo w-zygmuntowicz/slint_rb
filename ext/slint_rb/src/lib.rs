@@ -20,5 +20,6 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     let compilation_result_class = module.define_class("CompilationResult", ruby.class_object())?;
     compilation_result_class.define_method("render", method!(compiler::CompilationResult::render, 0))?;
     compilation_result_class.define_method("valid?", method!(compiler::CompilationResult::valid, 0))?;
+    compilation_result_class.define_method("diagnostics", method!(compiler::CompilationResult::diagnostics, 0))?;
     Ok(())
 }

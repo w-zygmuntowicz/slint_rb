@@ -180,6 +180,19 @@ impl CompilationResult {
             !compilation_result.has_errors()
         })
     }
+
+    pub fn diagnostics(&self) -> Vec<String> {
+        let index = self.handle.clone();
+
+        self.actor.apply(move |state| {
+            let compilation_result = state.compilation_results.get(&index).unwrap();
+
+            compilation_result
+                .diagnostics()
+                .map(|diagnostic| diagnostic.message().to_string())
+                .collect()
+        })
+    }
 }
 
 impl Drop for CompilationResult {
