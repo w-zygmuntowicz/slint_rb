@@ -14,12 +14,11 @@ enum Message {
     Evolution(Box<dyn Fn(&mut ActorState) -> () + Send>)
 }
 
-#[magnus::wrap(class = "Slint::Compiler")]
-pub struct Compiler {
-    actor: Arc<Actor>
+struct Actor {
+    channel: mpsc::SyncSender<Message>
 }
 
-impl Default for Compiler {
+impl Default for Actor {
     fn default() -> Self {
         let (channel, recv) = mpsc::sync_channel(0);
 
@@ -32,26 +31,15 @@ impl Default for Compiler {
             actor_loop(state, recv);
         });
 
-        let actor = Actor { channel: channel };
-        Self { actor: Arc::new(actor) }
+        Self { channel }
     }
-}
-
-fn actor_loop(mut state: ActorState, recv: mpsc::Receiver<Message>) {
-    while let Ok(msg) = recv.recv() {
-        match msg {
-            Message::Evolution(boxed_closure) => {
-                (&boxed_closure)(&mut state);
-            }
-        }
-    }
-}
-
-struct Actor {
-    channel: mpsc::SyncSender<Message>
 }
 
 impl Actor {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub fn apply<F, T>(&self, f: F) -> T
     where 
         F: Fn(&mut ActorState) -> T + Send + 'static,
@@ -70,6 +58,27 @@ impl Actor {
     }
 }
 
+fn actor_loop(mut state: ActorState, recv: mpsc::Receiver<Message>) {
+    while let Ok(msg) = recv.recv() {
+        match msg {
+            Message::Evolution(boxed_closure) => {
+                (&boxed_closure)(&mut state);
+            }
+        }
+    }
+}
+
+#[magnus::wrap(class = "Slint::Compiler")]
+pub struct Compiler {
+    actor: Arc<Actor>
+}
+
+impl Default for Compiler {
+    fn default() -> Self {
+        Self { actor: Arc::new(Actor::new()) }
+    }
+}
+
 impl Compiler {
     pub fn new() -> Self {
         Self::default()
@@ -85,7 +94,7 @@ impl Compiler {
         });
 
         CompilationResult {
-            channel: self.actor.channel.clone(),
+            actor: Arc::clone(&self.actor),
             handle
         }
     }
@@ -124,44 +133,31 @@ impl Compiler {
 
 #[magnus::wrap(class = "Slint::CompilationResult")]
 pub struct CompilationResult {
-    channel: mpsc::SyncSender<Message>,
+    actor: Arc<Actor>,
     handle: usize
 }
 
 impl CompilationResult {
     pub fn render(&self) {
-        let (send, recv) = mpsc::sync_channel(0);
-        
         let index = self.handle.clone();
-        let evolution = move |state: &mut ActorState| {
+
+        self.actor.apply(move |state: &mut ActorState| {
             let compilation_result = state.compilation_results.get(&index).unwrap();
 
             if let Some(definition) = compilation_result.component("HelloWorld") {
                 let instance = definition.create().unwrap();
                 instance.run().unwrap();
-                send.send(()).unwrap();
             }
-        };
-
-        let message = Message::Evolution(Box::new(evolution));
-        self.channel.send(message).unwrap();
-
-        recv.recv().unwrap()
+        })
     }
 }
 
 impl Drop for CompilationResult {
     fn drop(&mut self) {
-        let (send, recv) = mpsc::sync_channel(0);
-
         let index = self.handle.clone();
-        let evolution = move |state: &mut ActorState| {
-            state.compilation_results.remove(&index);
-            send.send(()).unwrap();
-        };
-        let message = Message::Evolution(Box::new(evolution));
-        self.channel.send(message).unwrap();
-
-        recv.recv().unwrap()
+        
+        self.actor.apply(move |state: &mut ActorState| { 
+            state.compilation_results.remove(&index); 
+        })
     }
 }
