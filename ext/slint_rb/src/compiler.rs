@@ -51,6 +51,23 @@ impl Compiler {
         Self::default()
     }
 
+    fn apply<F, T>(&self, f: F) -> T
+    where 
+        F: Fn(&mut ActorState) -> T + Send + 'static,
+        T: Send + 'static
+    {
+        let (send, recv) = mpsc::sync_channel(0);
+        let wrapper = move |state: &mut ActorState| {
+            let result = f(state);
+            send.send(result).unwrap();
+        };
+        let boxed = Box::new(wrapper);
+        let message = Message::Evolution(boxed);
+        self.channel.send(message).unwrap();
+
+        recv.recv().unwrap()
+    }
+
     pub fn build_from_path(&self, path: String) -> CompilationResult {
         let (send, recv) = mpsc::sync_channel(0);
         
@@ -73,68 +90,33 @@ impl Compiler {
     }
 
     pub fn include_paths(&self) -> Vec<String> {
-        let (send, recv) = mpsc::sync_channel(0);
-
-        let evolution = move |state: &mut ActorState| {
-            let paths = state.compiler
-                             .include_paths()
-                             .iter()
-                             .map(|p| p.to_str().unwrap_or_default().to_string())
-                             .collect();
-            
-            send.send(paths).unwrap();
-        };
-
-        let message = Message::Evolution(Box::new(evolution));
-        self.channel.send(message).unwrap();
-
-        recv.recv().unwrap()
+        self.apply(move |state: &mut ActorState| {
+            state.compiler
+                 .include_paths()
+                 .iter()
+                 .map(|p| p.to_str().unwrap_or_default().to_string())
+                 .collect()
+        })
     }
 
     pub fn set_include_paths(&self, include_paths: Vec<PathBuf>) {
-        let (send, recv) = mpsc::sync_channel(0);
-
-        let evolution = move |state: &mut ActorState| {
-            state.compiler.set_include_paths(include_paths.clone());
-
-            send.send(()).unwrap();
-        };
-        let message = Message::Evolution(Box::new(evolution));
-        self.channel.send(message).unwrap();
-
-        recv.recv().unwrap();
+        self.apply(move |state: &mut ActorState| state.compiler.set_include_paths(include_paths.clone()))
     }
 
     pub fn library_paths(&self) -> HashMap<String, PathBuf> {
-        let (send, recv) = mpsc::sync_channel(0);
-
-        let evolution = move |state: &mut ActorState| {
+        self.apply(move |state: &mut ActorState| {
             let mut paths = HashMap::new();
 
             for (key, path) in state.compiler.library_paths() {
                 paths.insert(key.clone(), path.clone());
             }
 
-            send.send(paths).unwrap();
-        };
-        let message = Message::Evolution(Box::new(evolution));
-        self.channel.send(message).unwrap();
-
-        recv.recv().unwrap()
+            paths
+        })
     }
 
     pub fn set_library_paths(&self, library_paths: HashMap<String, PathBuf>) {
-        let (send, recv) = mpsc::sync_channel(0);
-
-        let evolution = move |state: &mut ActorState| {
-            state.compiler.set_library_paths(library_paths.clone());
-
-            send.send(()).unwrap();
-        };
-        let message = Message::Evolution(Box::new(evolution));
-        self.channel.send(message).unwrap();
-
-        recv.recv().unwrap();
+        self.apply(move |state: &mut ActorState| state.compiler.set_library_paths(library_paths.clone()))
     }
 }
 
