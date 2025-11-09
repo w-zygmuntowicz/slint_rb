@@ -34,5 +34,14 @@ module Slint
       compiler.library_paths = { library: "/path" }
       assert_equal({ "library" => "/path" }, compiler.library_paths)
     end
+
+    def test_style_accessor
+      compiler = Compiler.new
+
+      assert_nil(compiler.style)
+
+      compiler.style = "material"
+      assert_equal("material", compiler.style)
+    end
   end
 end

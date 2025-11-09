@@ -128,6 +128,14 @@ impl Compiler {
     pub fn set_library_paths(&self, library_paths: HashMap<String, PathBuf>) {
         self.actor.apply(move |state: &mut ActorState| state.compiler.set_library_paths(library_paths.clone()))
     }
+
+    pub fn style(&self) -> Option<String> {
+        self.actor.apply(move |state: &mut ActorState| state.compiler.style().cloned())
+    }
+
+    pub fn set_style(&self, style: String) {
+        self.actor.apply(move |state: &mut ActorState| state.compiler.set_style(style.clone()))
+    }
 }
 
 
