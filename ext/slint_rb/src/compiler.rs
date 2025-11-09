@@ -1,7 +1,7 @@
 use slint_interpreter::{ComponentHandle};
 use std::path::PathBuf;
-use std::{thread};
-use std::sync::mpsc;
+use std::thread;
+use std::sync::{mpsc, Arc};
 use std::collections::HashMap;
 
 struct ActorState {
@@ -16,7 +16,7 @@ enum Message {
 
 #[magnus::wrap(class = "Slint::Compiler")]
 pub struct Compiler {
-    channel: mpsc::SyncSender<Message>,
+    actor: Arc<Actor>
 }
 
 impl Default for Compiler {
@@ -32,7 +32,8 @@ impl Default for Compiler {
             actor_loop(state, recv);
         });
 
-        Self { channel }
+        let actor = Actor { channel: channel };
+        Self { actor: Arc::new(actor) }
     }
 }
 
@@ -46,12 +47,12 @@ fn actor_loop(mut state: ActorState, recv: mpsc::Receiver<Message>) {
     }
 }
 
-impl Compiler {
-    pub fn new() -> Self {
-        Self::default()
-    }
+struct Actor {
+    channel: mpsc::SyncSender<Message>
+}
 
-    fn apply<F, T>(&self, f: F) -> T
+impl Actor {
+    pub fn apply<F, T>(&self, f: F) -> T
     where 
         F: Fn(&mut ActorState) -> T + Send + 'static,
         T: Send + 'static
@@ -67,30 +68,30 @@ impl Compiler {
 
         recv.recv().unwrap()
     }
+}
 
-    pub fn build_from_path(&self, path: String) -> CompilationResult {
-        let (send, recv) = mpsc::sync_channel(0);
-        
-        let evolution = move |state: &mut ActorState| {
+impl Compiler {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn build_from_path(&self, path: String) -> CompilationResult {        
+        let handle = self.actor.apply(move |state: &mut ActorState| {
             let compilation_result = spin_on::spin_on(state.compiler.build_from_path(path.clone()));
             let handle = state.next_compilation_result_id;
             state.compilation_results.insert(handle, compilation_result);
             state.next_compilation_result_id += 1;
-            send.send(handle).unwrap();
-        };
+            handle
+        });
 
-        let message = Message::Evolution(Box::new(evolution));
-        self.channel.send(message).unwrap();
-        
-        let handle = recv.recv().unwrap();
         CompilationResult {
-            channel: self.channel.clone(),
+            channel: self.actor.channel.clone(),
             handle
         }
     }
 
     pub fn include_paths(&self) -> Vec<String> {
-        self.apply(move |state: &mut ActorState| {
+        self.actor.apply(move |state: &mut ActorState| {
             state.compiler
                  .include_paths()
                  .iter()
@@ -100,11 +101,11 @@ impl Compiler {
     }
 
     pub fn set_include_paths(&self, include_paths: Vec<PathBuf>) {
-        self.apply(move |state: &mut ActorState| state.compiler.set_include_paths(include_paths.clone()))
+        self.actor.apply(move |state: &mut ActorState| state.compiler.set_include_paths(include_paths.clone()))
     }
 
     pub fn library_paths(&self) -> HashMap<String, PathBuf> {
-        self.apply(move |state: &mut ActorState| {
+        self.actor.apply(move |state: &mut ActorState| {
             let mut paths = HashMap::new();
 
             for (key, path) in state.compiler.library_paths() {
@@ -116,7 +117,7 @@ impl Compiler {
     }
 
     pub fn set_library_paths(&self, library_paths: HashMap<String, PathBuf>) {
-        self.apply(move |state: &mut ActorState| state.compiler.set_library_paths(library_paths.clone()))
+        self.actor.apply(move |state: &mut ActorState| state.compiler.set_library_paths(library_paths.clone()))
     }
 }
 
