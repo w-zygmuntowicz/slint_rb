@@ -16,10 +16,16 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     compiler_class.define_method("library_paths=", method!(compiler::Compiler::set_library_paths, 1))?;
     compiler_class.define_method("style", method!(compiler::Compiler::style, 0))?;
     compiler_class.define_method("style=", method!(compiler::Compiler::set_style, 1))?;
-
+    
     let compilation_result_class = module.define_class("CompilationResult", ruby.class_object())?;
     compilation_result_class.define_method("render", method!(compiler::CompilationResult::render, 0))?;
     compilation_result_class.define_method("valid?", method!(compiler::CompilationResult::valid, 0))?;
     compilation_result_class.define_method("diagnostics", method!(compiler::CompilationResult::diagnostics, 0))?;
+
+    let diagnostic_class = module.define_class("Diagnostic", ruby.class_object())?;
+    diagnostic_class.define_method("message", method!(compiler::Diagnostic::message, 0))?;
+    diagnostic_class.define_method("line_column", method!(compiler::Diagnostic::line_column, 0))?;
+    diagnostic_class.define_method("level", method!(compiler::Diagnostic::level, 0))?;
+    diagnostic_class.define_method("source_file", method!(compiler::Diagnostic::source_file, 0))?;
     Ok(())
 }

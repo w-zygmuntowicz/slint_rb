@@ -1,13 +1,16 @@
-use slint_interpreter::{ComponentHandle};
+// use slint_interpreter::{ComponentHandle};
 use std::path::PathBuf;
 use std::thread;
 use std::sync::{mpsc, Arc};
 use std::collections::HashMap;
+use magnus::{RArray, Ruby};
 
 struct ActorState {
     compiler: slint_interpreter::Compiler,
     compilation_results: HashMap<usize, slint_interpreter::CompilationResult>,
-    next_compilation_result_id: usize
+    next_compilation_result_id: usize,
+    diagnostics: HashMap<usize, slint_interpreter::Diagnostic>,
+    next_diagnostic_id: usize
 }
 
 enum Message {
@@ -26,7 +29,9 @@ impl Default for Actor {
             let state = ActorState {
                 compiler: slint_interpreter::Compiler::default(),
                 compilation_results: HashMap::new(),
-                next_compilation_result_id:  0
+                next_compilation_result_id: 0,
+                diagnostics: HashMap::new(),
+                next_diagnostic_id: 0
             };
             actor_loop(state, recv);
         });
@@ -166,7 +171,7 @@ impl CompilationResult {
 
             if let Some(definition) = compilation_result.component("HelloWorld") {
                 let instance = definition.create().unwrap();
-                instance.run().unwrap();
+                // instance.run().unwrap();
             }
         })
     }
@@ -181,17 +186,23 @@ impl CompilationResult {
         })
     }
 
-    pub fn diagnostics(&self) -> Vec<String> {
-        let index = self.handle.clone();
-
-        self.actor.apply(move |state| {
+    pub fn diagnostics(ruby: &Ruby, rb_self: &Self) -> RArray {
+        let index = rb_self.handle.clone();
+        
+        let diagnostic_handles = rb_self.actor.apply(move |state| {
             let compilation_result = state.compilation_results.get(&index).unwrap();
+            let mut diagnostic_handles: Vec<usize> = Vec::new();
 
-            compilation_result
-                .diagnostics()
-                .map(|diagnostic| diagnostic.message().to_string())
-                .collect()
-        })
+            compilation_result.diagnostics().for_each(|diagnostic|  {
+                state.diagnostics.insert(state.next_diagnostic_id, diagnostic);
+                diagnostic_handles.push(state.next_diagnostic_id);
+                state.next_diagnostic_id += 1;
+            });
+
+            diagnostic_handles
+        });
+
+        ruby.ary_from_iter(diagnostic_handles.into_iter().map(|handle| Diagnostic { handle, actor: Arc::clone(&rb_self.actor) }))
     }
 }
 
@@ -201,6 +212,60 @@ impl Drop for CompilationResult {
         
         self.actor.apply(move |state: &mut ActorState| { 
             state.compilation_results.remove(&index); 
+        })
+    }
+}
+
+#[magnus::wrap(class = "Slint::Diagnostic")]
+pub struct Diagnostic {
+    actor: Arc<Actor>,
+    handle: usize
+}
+
+impl Diagnostic {
+    pub fn level(ruby: &Ruby, rb_self: &Self) -> magnus::StaticSymbol {
+        let index = rb_self.handle.clone();
+        let level = rb_self.actor.apply(move |state| {
+            let diagnostic = state.diagnostics.get(&index).unwrap();
+
+            diagnostic.level()
+        });
+
+
+        match level {
+            slint_interpreter::DiagnosticLevel::Error => ruby.sym_new("error"),
+            slint_interpreter::DiagnosticLevel::Warning => ruby.sym_new("warning"),
+            _ => todo!(),
+        }
+    }
+
+    pub fn message(&self) -> String {
+        let index = self.handle.clone();
+
+        self.actor.apply(move |state| {
+            let diagnostic = state.diagnostics.get(&index).unwrap();
+
+            diagnostic.message().to_string()
+        })
+    }
+
+    pub fn line_column(&self) -> (usize, usize) {
+        let index = self.handle.clone();
+
+        self.actor.apply(move |state| {
+            let diagnostic = state.diagnostics.get(&index).unwrap();
+
+            diagnostic.line_column()
+        })
+    }
+
+    pub fn source_file(&self) -> Option<PathBuf> {
+        let index = self.handle.clone();
+
+        self.actor.apply(move |state| {
+            let diagnostic = state.diagnostics.get(&index).unwrap();
+
+            diagnostic.source_file().map(|path| path.to_owned())
         })
     }
 }
