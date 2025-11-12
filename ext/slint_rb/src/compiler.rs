@@ -1,4 +1,4 @@
-// use slint_interpreter::{ComponentHandle};
+use slint_interpreter::{ComponentHandle};
 use std::path::PathBuf;
 use std::thread;
 use std::sync::{mpsc, Arc};
@@ -10,7 +10,9 @@ struct ActorState {
     compilation_results: HashMap<usize, slint_interpreter::CompilationResult>,
     next_compilation_result_id: usize,
     diagnostics: HashMap<usize, slint_interpreter::Diagnostic>,
-    next_diagnostic_id: usize
+    next_diagnostic_id: usize,
+    component_definitions: HashMap<usize, slint_interpreter::ComponentDefinition>,
+    next_component_definition_id: usize
 }
 
 enum Message {
@@ -31,7 +33,9 @@ impl Default for Actor {
                 compilation_results: HashMap::new(),
                 next_compilation_result_id: 0,
                 diagnostics: HashMap::new(),
-                next_diagnostic_id: 0
+                next_diagnostic_id: 0,
+                component_definitions: HashMap::new(),
+                next_component_definition_id: 0
             };
             actor_loop(state, recv);
         });
@@ -163,19 +167,6 @@ pub struct CompilationResult {
 }
 
 impl CompilationResult {
-    pub fn render(&self) {
-        let index = self.handle.clone();
-
-        self.actor.apply(move |state: &mut ActorState| {
-            let compilation_result = state.compilation_results.get(&index).unwrap();
-
-            if let Some(definition) = compilation_result.component("HelloWorld") {
-                let instance = definition.create().unwrap();
-                // instance.run().unwrap();
-            }
-        })
-    }
-
     pub fn valid(&self) -> bool {
         let index = self.handle.clone();
 
@@ -203,6 +194,41 @@ impl CompilationResult {
         });
 
         ruby.ary_from_iter(diagnostic_handles.into_iter().map(|handle| Diagnostic { handle, actor: Arc::clone(&rb_self.actor) }))
+    }
+
+    pub fn component_names(&self) -> Vec<String> {
+        let index = self.handle.clone();
+
+        self.actor.apply(move |state| {
+            let compilation_result = state.compilation_results.get(&index).unwrap();
+
+            compilation_result
+                .component_names()
+                .map(|name| name.to_string())
+                .collect()
+        })
+    }
+
+    pub fn components(ruby: &Ruby, rb_self: &Self) -> RArray {
+        let index = rb_self.handle.clone();
+
+        let component_handles = rb_self.actor.apply(move |state| {
+            let compilation_result = state.compilation_results.get(&index).unwrap();
+            let mut component_handles: Vec<usize> = Vec::new();
+
+            compilation_result.components().for_each(|component| {
+                state.component_definitions.insert(state.next_component_definition_id, component);
+                component_handles.push(state.next_component_definition_id);
+                state.next_component_definition_id += 1;
+            });
+
+            component_handles
+        });
+
+        let component_definitions = component_handles
+            .into_iter()
+            .map(|handle| ComponentDefinition { handle, actor: Arc::clone(&rb_self.actor) });
+        ruby.ary_from_iter(component_definitions)
     }
 }
 
@@ -266,6 +292,25 @@ impl Diagnostic {
             let diagnostic = state.diagnostics.get(&index).unwrap();
 
             diagnostic.source_file().map(|path| path.to_owned())
+        })
+    }
+}
+
+#[magnus::wrap(class="Slint::ComponentDefinition")]
+pub struct ComponentDefinition {
+    handle: usize,
+    actor: Arc<Actor>
+}
+
+impl ComponentDefinition {
+    pub fn render(&self) {
+        let index = self.handle.clone();
+
+        self.actor.apply(move |state: &mut ActorState| {
+            let component_definition = state.component_definitions.get(&index).unwrap();
+
+            let instance = component_definition.create().unwrap();
+            instance.run().unwrap();
         })
     }
 }

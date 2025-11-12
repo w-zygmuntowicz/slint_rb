@@ -31,5 +31,18 @@ module Slint
 
       refute_empty(compilation_result.diagnostics)
     end
+
+    def test_component_names
+      compilation_result = @compiler.build_from_source("export component App inherits Window {}", "")
+
+      assert_equal(["App"], compilation_result.component_names)
+    end
+
+    def test_components
+      compilation_result = @compiler.build_from_source("export component App inherits Window {}", "")
+
+      assert(1, compilation_result.components.length)
+      assert_instance_of(ComponentDefinition, compilation_result.components.first)
+    end
   end
 end
