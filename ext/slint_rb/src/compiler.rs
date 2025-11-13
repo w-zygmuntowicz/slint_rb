@@ -1,9 +1,9 @@
-use slint_interpreter::{ComponentHandle};
-use std::path::PathBuf;
-use std::thread;
-use std::sync::{mpsc, Arc};
-use std::collections::HashMap;
 use magnus::{RArray, Ruby};
+use slint_interpreter::ComponentHandle;
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::{mpsc, Arc};
+use std::thread;
 
 struct ActorState {
     compiler: slint_interpreter::Compiler,
@@ -12,15 +12,15 @@ struct ActorState {
     diagnostics: HashMap<usize, slint_interpreter::Diagnostic>,
     next_diagnostic_id: usize,
     component_definitions: HashMap<usize, slint_interpreter::ComponentDefinition>,
-    next_component_definition_id: usize
+    next_component_definition_id: usize,
 }
 
 enum Message {
-    Evolution(Box<dyn Fn(&mut ActorState) -> () + Send>)
+    Evolution(Box<dyn Fn(&mut ActorState) -> () + Send>),
 }
 
 struct Actor {
-    channel: mpsc::SyncSender<Message>
+    channel: mpsc::SyncSender<Message>,
 }
 
 impl Default for Actor {
@@ -35,7 +35,7 @@ impl Default for Actor {
                 diagnostics: HashMap::new(),
                 next_diagnostic_id: 0,
                 component_definitions: HashMap::new(),
-                next_component_definition_id: 0
+                next_component_definition_id: 0,
             };
             actor_loop(state, recv);
         });
@@ -50,9 +50,9 @@ impl Actor {
     }
 
     pub fn apply<F, T>(&self, f: F) -> T
-    where 
+    where
         F: Fn(&mut ActorState) -> T + Send + 'static,
-        T: Send + 'static
+        T: Send + 'static,
     {
         let (send, recv) = mpsc::sync_channel(0);
         let wrapper = move |state: &mut ActorState| {
@@ -79,12 +79,14 @@ fn actor_loop(mut state: ActorState, recv: mpsc::Receiver<Message>) {
 
 #[magnus::wrap(class = "Slint::Compiler")]
 pub struct Compiler {
-    actor: Arc<Actor>
+    actor: Arc<Actor>,
 }
 
 impl Default for Compiler {
     fn default() -> Self {
-        Self { actor: Arc::new(Actor::new()) }
+        Self {
+            actor: Arc::new(Actor::new()),
+        }
     }
 }
 
@@ -93,7 +95,7 @@ impl Compiler {
         Self::default()
     }
 
-    pub fn build_from_path(&self, path: String) -> CompilationResult {        
+    pub fn build_from_path(&self, path: String) -> CompilationResult {
         let handle = self.actor.apply(move |state: &mut ActorState| {
             let compilation_result = spin_on::spin_on(state.compiler.build_from_path(path.clone()));
             let handle = state.next_compilation_result_id;
@@ -104,34 +106,44 @@ impl Compiler {
 
         CompilationResult {
             actor: Arc::clone(&self.actor),
-            handle
+            handle,
         }
     }
 
     pub fn build_from_source(&self, source: String, path: PathBuf) -> CompilationResult {
         let handle = self.actor.apply(move |state| {
-            let compilation_result = spin_on::spin_on(state.compiler.build_from_source(source.clone(), path.clone()));
+            let compilation_result = spin_on::spin_on(
+                state
+                    .compiler
+                    .build_from_source(source.clone(), path.clone()),
+            );
             let handle = state.next_compilation_result_id;
             state.compilation_results.insert(handle, compilation_result);
             state.next_compilation_result_id += 1;
             handle
         });
 
-        CompilationResult { actor: Arc::clone(&self.actor), handle }
+        CompilationResult {
+            actor: Arc::clone(&self.actor),
+            handle,
+        }
     }
 
     pub fn include_paths(&self) -> Vec<String> {
         self.actor.apply(move |state: &mut ActorState| {
-            state.compiler
-                 .include_paths()
-                 .iter()
-                 .map(|p| p.to_str().unwrap_or_default().to_string())
-                 .collect()
+            state
+                .compiler
+                .include_paths()
+                .iter()
+                .map(|p| p.to_str().unwrap_or_default().to_string())
+                .collect()
         })
     }
 
     pub fn set_include_paths(&self, include_paths: Vec<PathBuf>) {
-        self.actor.apply(move |state: &mut ActorState| state.compiler.set_include_paths(include_paths.clone()))
+        self.actor.apply(move |state: &mut ActorState| {
+            state.compiler.set_include_paths(include_paths.clone())
+        })
     }
 
     pub fn library_paths(&self) -> HashMap<String, PathBuf> {
@@ -147,23 +159,26 @@ impl Compiler {
     }
 
     pub fn set_library_paths(&self, library_paths: HashMap<String, PathBuf>) {
-        self.actor.apply(move |state: &mut ActorState| state.compiler.set_library_paths(library_paths.clone()))
+        self.actor.apply(move |state: &mut ActorState| {
+            state.compiler.set_library_paths(library_paths.clone())
+        })
     }
 
     pub fn style(&self) -> Option<String> {
-        self.actor.apply(move |state: &mut ActorState| state.compiler.style().cloned())
+        self.actor
+            .apply(move |state: &mut ActorState| state.compiler.style().cloned())
     }
 
     pub fn set_style(&self, style: String) {
-        self.actor.apply(move |state: &mut ActorState| state.compiler.set_style(style.clone()))
+        self.actor
+            .apply(move |state: &mut ActorState| state.compiler.set_style(style.clone()))
     }
 }
-
 
 #[magnus::wrap(class = "Slint::CompilationResult")]
 pub struct CompilationResult {
     actor: Arc<Actor>,
-    handle: usize
+    handle: usize,
 }
 
 impl CompilationResult {
@@ -179,13 +194,15 @@ impl CompilationResult {
 
     pub fn diagnostics(ruby: &Ruby, rb_self: &Self) -> RArray {
         let index = rb_self.handle.clone();
-        
+
         let diagnostic_handles = rb_self.actor.apply(move |state| {
             let compilation_result = state.compilation_results.get(&index).unwrap();
             let mut diagnostic_handles: Vec<usize> = Vec::new();
 
-            compilation_result.diagnostics().for_each(|diagnostic|  {
-                state.diagnostics.insert(state.next_diagnostic_id, diagnostic);
+            compilation_result.diagnostics().for_each(|diagnostic| {
+                state
+                    .diagnostics
+                    .insert(state.next_diagnostic_id, diagnostic);
                 diagnostic_handles.push(state.next_diagnostic_id);
                 state.next_diagnostic_id += 1;
             });
@@ -193,7 +210,10 @@ impl CompilationResult {
             diagnostic_handles
         });
 
-        ruby.ary_from_iter(diagnostic_handles.into_iter().map(|handle| Diagnostic { handle, actor: Arc::clone(&rb_self.actor) }))
+        ruby.ary_from_iter(diagnostic_handles.into_iter().map(|handle| Diagnostic {
+            handle,
+            actor: Arc::clone(&rb_self.actor),
+        }))
     }
 
     pub fn component_names(&self) -> Vec<String> {
@@ -217,7 +237,9 @@ impl CompilationResult {
             let mut component_handles: Vec<usize> = Vec::new();
 
             compilation_result.components().for_each(|component| {
-                state.component_definitions.insert(state.next_component_definition_id, component);
+                state
+                    .component_definitions
+                    .insert(state.next_component_definition_id, component);
                 component_handles.push(state.next_component_definition_id);
                 state.next_component_definition_id += 1;
             });
@@ -225,9 +247,13 @@ impl CompilationResult {
             component_handles
         });
 
-        let component_definitions = component_handles
-            .into_iter()
-            .map(|handle| ComponentDefinition { handle, actor: Arc::clone(&rb_self.actor) });
+        let component_definitions =
+            component_handles
+                .into_iter()
+                .map(|handle| ComponentDefinition {
+                    handle,
+                    actor: Arc::clone(&rb_self.actor),
+                });
         ruby.ary_from_iter(component_definitions)
     }
 }
@@ -235,9 +261,9 @@ impl CompilationResult {
 impl Drop for CompilationResult {
     fn drop(&mut self) {
         let index = self.handle.clone();
-        
-        self.actor.apply(move |state: &mut ActorState| { 
-            state.compilation_results.remove(&index); 
+
+        self.actor.apply(move |state: &mut ActorState| {
+            state.compilation_results.remove(&index);
         })
     }
 }
@@ -245,7 +271,7 @@ impl Drop for CompilationResult {
 #[magnus::wrap(class = "Slint::Diagnostic")]
 pub struct Diagnostic {
     actor: Arc<Actor>,
-    handle: usize
+    handle: usize,
 }
 
 impl Diagnostic {
@@ -256,7 +282,6 @@ impl Diagnostic {
 
             diagnostic.level()
         });
-
 
         match level {
             slint_interpreter::DiagnosticLevel::Error => ruby.sym_new("error"),
@@ -296,10 +321,10 @@ impl Diagnostic {
     }
 }
 
-#[magnus::wrap(class="Slint::ComponentDefinition")]
+#[magnus::wrap(class = "Slint::ComponentDefinition")]
 pub struct ComponentDefinition {
     handle: usize,
-    actor: Arc<Actor>
+    actor: Arc<Actor>,
 }
 
 impl ComponentDefinition {
