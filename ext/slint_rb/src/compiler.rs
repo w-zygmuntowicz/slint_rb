@@ -7,18 +7,18 @@ use std::thread::{self, ThreadId};
 
 #[magnus::wrap(class = "Slint::Compiler")]
 pub struct Compiler {
-    compiler: MyWrapper<slint_interpreter::Compiler>
+    compiler: SendableWrapper<slint_interpreter::Compiler>
 }
 
 #[magnus::wrap(class = "Slint::CompilationResult")]
 pub struct CompilationResult {
-    result: MyWrapper<slint_interpreter::CompilationResult>
+    result: SendableWrapper<slint_interpreter::CompilationResult>
 }
 
 impl Compiler {
     pub fn new() -> Self {
         Self {
-            compiler: MyWrapper::new(Default::default())
+            compiler: SendableWrapper::new(Default::default())
         }
     }
 
@@ -26,7 +26,7 @@ impl Compiler {
         self.compiler.with(|inner| {
             let future = inner.build_from_path(path);
             let result = spin_on::spin_on(future);
-            CompilationResult { result: MyWrapper::new(result) }
+            CompilationResult { result: SendableWrapper::new(result) }
         })
     }
 
@@ -35,7 +35,7 @@ impl Compiler {
             let future = inner.build_from_source(source_code, path);
             let result = spin_on::spin_on(future);
 
-            CompilationResult { result: MyWrapper::new(result) }
+            CompilationResult { result: SendableWrapper::new(result) }
         })
     }
 
@@ -86,7 +86,7 @@ impl CompilationResult {
     pub fn diagnostics(ruby: &Ruby, rb_self: &Self) -> RArray {
         rb_self.result.with(|inner| {
             ruby.ary_from_iter(inner.diagnostics().map(|d| Diagnostic {
-                diagnostic: MyWrapper::new(d)
+                diagnostic: SendableWrapper::new(d)
             }))
         })
     }
@@ -103,7 +103,7 @@ impl CompilationResult {
     pub fn components(ruby: &Ruby, rb_self: &Self) -> RArray {
         rb_self.result.with(|inner| {
             ruby.ary_from_iter(inner.components().map(|c| ComponentDefinition {
-                definition: MyWrapper::new(c)
+                definition: SendableWrapper::new(c)
             }))
         })
     }
@@ -111,7 +111,7 @@ impl CompilationResult {
 
 #[magnus::wrap(class = "Slint::Diagnostic")]
 pub struct Diagnostic {
-    diagnostic: MyWrapper<slint_interpreter::Diagnostic>
+    diagnostic: SendableWrapper<slint_interpreter::Diagnostic>
 }
 
 impl Diagnostic {
@@ -140,7 +140,7 @@ impl Diagnostic {
 
 #[magnus::wrap(class = "Slint::ComponentDefinition")]
 pub struct ComponentDefinition {
-    definition: MyWrapper<slint_interpreter::ComponentDefinition>
+    definition: SendableWrapper<slint_interpreter::ComponentDefinition>
 }
 
 impl ComponentDefinition {
@@ -152,12 +152,12 @@ impl ComponentDefinition {
     }
 }
 
-struct MyWrapper<T> {
+struct SendableWrapper<T> {
     value: RefCell<T>,
     thread_id: ThreadId
 }
 
-impl<T> MyWrapper<T> {
+impl<T> SendableWrapper<T> {
     pub fn new(value: T) -> Self {
         Self {
             value: RefCell::new(value),
@@ -176,4 +176,4 @@ impl<T> MyWrapper<T> {
     }
 }
 
-unsafe impl<T> Send for MyWrapper<T> {}
+unsafe impl<T> Send for SendableWrapper<T> {}
