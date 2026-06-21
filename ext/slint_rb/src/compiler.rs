@@ -50,9 +50,7 @@ impl Compiler {
     }
 
     pub fn set_include_paths(&self, include_paths: Vec<PathBuf>) {
-        let mut t = self.compiler.value.borrow_mut();
-
-        t.set_include_paths(include_paths);
+        self.compiler.with_mut(|inner| inner.set_include_paths(include_paths))
     }
 
     pub fn library_paths(&self) -> HashMap<String, PathBuf> {
@@ -68,9 +66,7 @@ impl Compiler {
     }
 
     pub fn set_library_paths(&self, library_paths: HashMap<String, PathBuf>) {
-        let mut t = self.compiler.value.borrow_mut();
-
-        t.set_library_paths(library_paths);
+        self.compiler.with_mut(|inner| inner.set_library_paths(library_paths))
     }
 
     pub fn style(&self) -> Option<String> {
@@ -78,9 +74,7 @@ impl Compiler {
     }
 
     pub fn set_style(&self, style: String) {
-        let mut t = self.compiler.value.borrow_mut();
-        
-        t.set_style(style);
+        self.compiler.with_mut(|inner| inner.set_style(style))
     }
 }
 
@@ -174,6 +168,11 @@ impl<T> MyWrapper<T> {
     pub fn with<R>(&self, f: impl FnOnce(&T) -> R) -> R {
         let guard = self.value.borrow();
         f(&guard)
+    }
+
+    pub fn with_mut<R>(&self, f: impl FnOnce(&mut T) -> R) -> R {
+        let mut guard = self.value.borrow_mut();
+        f(&mut guard)
     }
 }
 
