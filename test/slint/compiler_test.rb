@@ -61,5 +61,15 @@ module Slint
       assert_instance_of(CompilationResult, compilation_result)
       assert(compilation_result.valid?)
     end
+
+    # def test_render
+    #   compiler = Compiler.new
+
+    #   compilation_result = compiler.build_from_path("test/ui/app-window.slint")
+    #   assert(compilation_result.valid?)
+
+    #   component_definition = compilation_result.components.first
+    #   component_definition.render
+    # end
   end
 end

@@ -59,6 +59,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
 
     let component_definition_class =
         module.define_class("ComponentDefinition", ruby.class_object())?;
+
     component_definition_class
         .define_method("render", method!(compiler::ComponentDefinition::render, 0))?;
     Ok(())
