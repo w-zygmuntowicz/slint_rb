@@ -169,6 +169,10 @@ impl ComponentDefinition {
     pub fn callbacks(&self) -> Vec<String> {
         self.definition.with(|inner| inner.callbacks().collect() )
     }
+
+    pub fn functions(&self) -> Vec<String> {
+        self.definition.with(|inner| inner.functions().collect())
+    }
 }
 
 impl From<slint_interpreter::ComponentInstance> for ComponentInstance {

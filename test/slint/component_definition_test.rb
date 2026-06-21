@@ -30,5 +30,15 @@ module Slint
 
       assert_equal(["clicked"], component_definition.callbacks)
     end
+
+    def test_functions
+      compilation_result = @compiler.build_from_source(
+        "export component App inherits Window { public function my-fun() {} }",
+        ""
+      )
+      component_definition = compilation_result.components.first
+
+      assert_equal(["my-fun"], component_definition.functions)
+    end
   end
 end
