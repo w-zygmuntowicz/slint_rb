@@ -62,14 +62,24 @@ module Slint
       assert(compilation_result.valid?)
     end
 
-    # def test_render
-    #   compiler = Compiler.new
+    def test_set_translation_domain
+      skip("Not sure how to test this")
+    end
 
-    #   compilation_result = compiler.build_from_path("test/ui/app-window.slint")
-    #   assert(compilation_result.valid?)
+    def test_set_file_loader
+      skip("Not sure how to test this")
+    end
 
-    #   component_definition = compilation_result.components.first
-    #   component_definition.render
-    # end
+    def test_render
+      compiler = Compiler.new
+
+      compilation_result = compiler.build_from_path("test/ui/app-window.slint")
+      assert(compilation_result.valid?)
+
+      component_definition = compilation_result.components.first
+      component_instance = component_definition.create
+
+      component_instance.render
+    end
   end
 end

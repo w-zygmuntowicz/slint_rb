@@ -153,10 +153,31 @@ pub struct ComponentDefinition {
 }
 
 impl ComponentDefinition {
-    pub fn render(&self) {
-        self.definition.with(|inner| {
-            let instance = inner.create().unwrap();
-            instance.run().unwrap();
+    pub fn create(ruby: &Ruby, rb_self: &Self) -> Result<ComponentInstance, magnus::Error> {
+        rb_self.definition.with(|inner| {
+            match inner.create() {
+                Ok(instance) => Ok(instance.into()),
+                Err(e) => Err(magnus::Error::new(ruby.exception_standard_error(), e.to_string())),
+            }
         })
+    }
+}
+
+impl From<slint_interpreter::ComponentInstance> for ComponentInstance {
+    fn from(instance: slint_interpreter::ComponentInstance) -> Self {
+        Self {
+            instance: SendableWrapper::new(instance)
+        }
+    }
+}
+
+#[magnus::wrap(class = "Slint::ComponentInstance")]
+pub struct ComponentInstance {
+    instance: SendableWrapper<slint_interpreter::ComponentInstance>
+}
+
+impl ComponentInstance {
+    pub fn render(&self) {
+        self.instance.with(|inner| inner.run().unwrap())
     }
 }
