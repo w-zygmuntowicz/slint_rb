@@ -161,6 +161,10 @@ impl ComponentDefinition {
             }
         })
     }
+
+    pub fn name(&self) -> String {
+        self.definition.with(|inner| inner.name().to_string())
+    }
 }
 
 impl From<slint_interpreter::ComponentInstance> for ComponentInstance {
