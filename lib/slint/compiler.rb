@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Slint
+  # Ruby wrapper around slint_interpreter::compiler
   class Compiler
     alias native_library_paths= library_paths=
 
