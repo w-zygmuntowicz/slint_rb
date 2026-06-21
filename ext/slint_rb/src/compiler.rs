@@ -39,11 +39,15 @@ impl From<slint_interpreter::ComponentDefinition> for ComponentDefinition {
     }
 }
 
+impl Default for Compiler {
+    fn default() -> Self {
+        Self { compiler: SendableWrapper::new(Default::default()) }
+    }
+}
+
 impl Compiler {
     pub fn new() -> Self {
-        Self {
-            compiler: SendableWrapper::new(Default::default())
-        }
+        Self::default()
     }
 
     pub fn build_from_path(&self, path: PathBuf) -> CompilationResult {
