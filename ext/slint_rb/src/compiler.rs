@@ -1,7 +1,7 @@
 use magnus::{RArray, Ruby};
 use slint_interpreter::ComponentHandle;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::sendable_wrapper::SendableWrapper;
 
@@ -15,6 +15,30 @@ pub struct CompilationResult {
     result: SendableWrapper<slint_interpreter::CompilationResult>
 }
 
+impl From<slint_interpreter::CompilationResult> for CompilationResult {
+    fn from(result: slint_interpreter::CompilationResult) -> Self {
+        Self {
+            result: SendableWrapper::new(result)
+        }
+    }
+}
+
+impl From<slint_interpreter::Diagnostic> for Diagnostic {
+    fn from(diagnostic: slint_interpreter::Diagnostic) -> Self {
+        Self {
+            diagnostic: SendableWrapper::new(diagnostic)
+        }
+    }
+}
+
+impl From<slint_interpreter::ComponentDefinition> for ComponentDefinition {
+    fn from(component_definition: slint_interpreter::ComponentDefinition) -> Self {
+        Self {
+            definition: SendableWrapper::new(component_definition)
+        }
+    }
+}
+
 impl Compiler {
     pub fn new() -> Self {
         Self {
@@ -26,7 +50,7 @@ impl Compiler {
         self.compiler.with(|inner| {
             let future = inner.build_from_path(path);
             let result = spin_on::spin_on(future);
-            CompilationResult { result: SendableWrapper::new(result) }
+            result.into()
         })
     }
 
@@ -34,19 +58,12 @@ impl Compiler {
         self.compiler.with(|inner| {
             let future = inner.build_from_source(source_code, path);
             let result = spin_on::spin_on(future);
-
-            CompilationResult { result: SendableWrapper::new(result) }
+            result.into()
         })
     }
 
-    pub fn include_paths(&self) -> Vec<String> {
-        self.compiler.with(|inner| {
-            inner
-                .include_paths()
-                .iter()
-                .map(|p| p.to_str().unwrap_or_default().to_string())
-                .collect()
-        })
+    pub fn include_paths(&self) -> Vec<PathBuf> {
+        self.compiler.with(|inner| { inner.include_paths().to_vec() })
     }
 
     pub fn set_include_paths(&self, include_paths: Vec<PathBuf>) {
@@ -54,15 +71,7 @@ impl Compiler {
     }
 
     pub fn library_paths(&self) -> HashMap<String, PathBuf> {
-        self.compiler.with(|inner| {
-            let mut paths = HashMap::new();
-
-            for (key, path) in inner.library_paths() {
-                paths.insert(key.clone(), path.clone());
-            }
-
-            paths
-        })
+        self.compiler.with(|inner| { inner.library_paths().clone() })
     }
 
     pub fn set_library_paths(&self, library_paths: HashMap<String, PathBuf>) {
@@ -85,9 +94,7 @@ impl CompilationResult {
 
     pub fn diagnostics(ruby: &Ruby, rb_self: &Self) -> RArray {
         rb_self.result.with(|inner| {
-            ruby.ary_from_iter(inner.diagnostics().map(|d| Diagnostic {
-                diagnostic: SendableWrapper::new(d)
-            }))
+            ruby.ary_from_iter(inner.diagnostics().map(Diagnostic::from))
         })
     }
 
@@ -102,9 +109,7 @@ impl CompilationResult {
 
     pub fn components(ruby: &Ruby, rb_self: &Self) -> RArray {
         rb_self.result.with(|inner| {
-            ruby.ary_from_iter(inner.components().map(|c| ComponentDefinition {
-                definition: SendableWrapper::new(c)
-            }))
+            ruby.ary_from_iter(inner.components().map(ComponentDefinition::from))
         })
     }
 }
@@ -120,7 +125,7 @@ impl Diagnostic {
             match inner.level() {
                 slint_interpreter::DiagnosticLevel::Error => ruby.sym_new("error"),
                 slint_interpreter::DiagnosticLevel::Warning => ruby.sym_new("warning"),
-                _ => ruby.sym_new("UNKNOWN")    
+                _ => ruby.sym_new("unknown")    
             }
         })
     }
@@ -134,7 +139,7 @@ impl Diagnostic {
     }
 
     pub fn source_file(&self) -> Option<PathBuf> {
-        self.diagnostic.with(|inner| inner.source_file().map(|sf| sf.to_owned()))
+        self.diagnostic.with(|inner| inner.source_file().map(Path::to_path_buf))
     }
 }
 
