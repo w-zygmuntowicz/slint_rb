@@ -1,10 +1,7 @@
-use magnus::typed_data::Hash;
 use magnus::{RArray, Ruby};
-use slint::SetRenderingNotifierError;
 use slint_interpreter::ComponentHandle;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::{mpsc, Arc};
 use std::cell::RefCell;
 use std::thread::{self, ThreadId};
 
@@ -21,10 +18,7 @@ pub struct CompilationResult {
 impl Compiler {
     pub fn new() -> Self {
         Self {
-            compiler: MyWrapper { 
-                value: Default::default(), 
-                thread_id: thread::current().id()
-            }
+            compiler: MyWrapper::new(Default::default())
         }
     }
 
@@ -32,7 +26,7 @@ impl Compiler {
         let t = self.compiler.value.borrow();
         let future = t.build_from_path(path);
         let result = spin_on::spin_on(future);
-        CompilationResult { result: MyWrapper { value: RefCell::new(result), thread_id: thread::current().id() } }
+        CompilationResult { result: MyWrapper::new(result) }
     }
 
     pub fn build_from_source(&self, source_code: String, path: PathBuf) -> CompilationResult {
@@ -40,7 +34,7 @@ impl Compiler {
         let future = t.build_from_source(source_code, path);
         let result = spin_on::spin_on(future);
 
-        CompilationResult { result: MyWrapper { value: RefCell::new(result), thread_id: thread::current().id() } }
+        CompilationResult { result: MyWrapper::new(result) }
     }
 
     pub fn include_paths(&self) -> Vec<String> {
@@ -99,7 +93,7 @@ impl CompilationResult {
         let t = rb_self.result.value.borrow();
 
         ruby.ary_from_iter(t.diagnostics().map(|d| Diagnostic {
-            diagnostic: MyWrapper { value: RefCell::new(d), thread_id: thread::current().id() }
+            diagnostic: MyWrapper::new(d)
         }))
     }
 
@@ -116,7 +110,7 @@ impl CompilationResult {
         let t = rb_self.result.value.borrow();
 
         ruby.ary_from_iter(t.components().map(|c| ComponentDefinition {
-            definition: MyWrapper { value: RefCell::new(c), thread_id: thread::current().id() }
+            definition: MyWrapper::new(c)
         }))
     }
 }
@@ -173,6 +167,15 @@ impl ComponentDefinition {
 struct MyWrapper<T> {
     value: RefCell<T>,
     thread_id: ThreadId
+}
+
+impl<T> MyWrapper<T> {
+    pub fn new(value: T) -> Self {
+        Self {
+            value: RefCell::new(value),
+            thread_id: thread::current().id()
+        }
+    }
 }
 
 unsafe impl<T> Send for MyWrapper<T> {}
