@@ -34,6 +34,7 @@ module Slint
         "count-prop" => :number,
         "active-prop" => :bool
       }
+
       assert_equal(expected_properties, @component_definition.properties)
     end
 

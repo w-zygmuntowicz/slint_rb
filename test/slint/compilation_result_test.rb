@@ -11,13 +11,13 @@ module Slint
     def test_valid_when_valid
       compilation_result = @compiler.build_from_source("export component App inherits Window {}", "")
 
-      assert(compilation_result.valid?)
+      assert_predicate(compilation_result, :valid?)
     end
 
     def test_valid_when_invalid
       compilation_result = @compiler.build_from_source("export component App }", "")
 
-      refute(compilation_result.valid?)
+      refute_predicate(compilation_result, :valid?)
     end
 
     def test_diagnostics_when_valid
@@ -41,7 +41,7 @@ module Slint
     def test_components
       compilation_result = @compiler.build_from_source("export component App inherits Window {}", "")
 
-      assert(1, compilation_result.components.length)
+      assert_equal(1, compilation_result.components.length)
       assert_instance_of(ComponentDefinition, compilation_result.components.first)
     end
   end
