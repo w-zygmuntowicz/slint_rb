@@ -40,5 +40,24 @@ module Slint
 
       assert_equal(["my-fun"], component_definition.functions)
     end
+
+    def test_properties
+      compilation_result = @compiler.build_from_source(
+        "export component App inherits Window {
+           in-out property <string> text-prop;
+           in-out property <int> count-prop;
+           in-out property <bool> active-prop;
+         }",
+         ""
+      )
+      component_definition = compilation_result.components.first
+
+      expected_properties = {
+        "text-prop" => :string,
+        "count-prop" => :number,
+        "active-prop" => :bool
+      }
+      assert_equal(expected_properties, component_definition.properties)
+    end
   end
 end

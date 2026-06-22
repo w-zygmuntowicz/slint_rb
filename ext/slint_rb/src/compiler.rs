@@ -173,6 +173,31 @@ impl ComponentDefinition {
     pub fn functions(&self) -> Vec<String> {
         self.definition.with(|inner| inner.functions().collect())
     }
+
+    pub fn properties(ruby: &Ruby, rb_self: &Self) -> Result<magnus::RHash, magnus::Error> {
+        rb_self.definition.with(|inner| {
+            inner.properties()
+                .map(|(name, val_type)| (name, Self::value_type_to_symbol(ruby, &val_type)))
+                .try_fold(ruby.hash_new(), |acc, (name, val_type)| {
+                    acc.aset(name, val_type)?;
+                    Ok(acc)
+                })
+        })
+    }
+
+    fn value_type_to_symbol(ruby: &Ruby, value_type: &slint_interpreter::ValueType) -> magnus::StaticSymbol {
+        match value_type {
+            slint_interpreter::ValueType::Void => ruby.sym_new("void"),
+            slint_interpreter::ValueType::Number => ruby.sym_new("number"),
+            slint_interpreter::ValueType::String => ruby.sym_new("string"),
+            slint_interpreter::ValueType::Bool => ruby.sym_new("bool"),
+            slint_interpreter::ValueType::Struct => ruby.sym_new("struct"),
+            slint_interpreter::ValueType::Brush => ruby.sym_new("brush"),
+            slint_interpreter::ValueType::Image => ruby.sym_new("image"),
+            slint_interpreter::ValueType::Model => ruby.sym_new("model"),
+            _ => ruby.sym_new("unknown")
+        }
+    }
 }
 
 impl From<slint_interpreter::ComponentInstance> for ComponentInstance {
