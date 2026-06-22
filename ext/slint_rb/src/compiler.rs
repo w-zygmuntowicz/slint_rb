@@ -198,6 +198,10 @@ impl ComponentDefinition {
             _ => ruby.sym_new("unknown")
         }
     }
+
+    pub fn globals(&self) -> Vec<String> {
+        self.definition.with(|inner| inner.globals().collect())
+    }
 }
 
 impl From<slint_interpreter::ComponentInstance> for ComponentInstance {
