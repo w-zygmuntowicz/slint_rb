@@ -167,7 +167,7 @@ impl ComponentDefinition {
     }
 
     pub fn callbacks(&self) -> Vec<String> {
-        self.definition.with(|inner| inner.callbacks().collect() )
+        self.definition.with(|inner| inner.callbacks().collect())
     }
 
     pub fn functions(&self) -> Vec<String> {
