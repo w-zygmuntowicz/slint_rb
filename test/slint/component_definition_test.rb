@@ -52,6 +52,11 @@ module Slint
       assert_nil(@component_definition.global_properties("MyNonExistentGlobal"))
     end
 
+    def test_gobal_callbacks
+      assert_equal(["hello-callback"], @component_definition.global_callbacks("MyGlobal"))
+      assert_nil(@component_definition.global_callbacks("MyNonExistentGlobal"))
+    end
+
     private
 
     def source
@@ -59,6 +64,8 @@ module Slint
         export global MyGlobal  {
           in-out property<string> text-prop;
           in-out property<bool> bool-prop;
+
+          callback hello-callback;
         }
 
         export component MyAppName inherits Window {

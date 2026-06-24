@@ -238,6 +238,13 @@ impl ComponentDefinition {
                 .transpose()
         })
     }
+
+    pub fn global_callbacks(&self, global_name: String) -> Option<Vec<String>> {
+        self.with(|inner| {
+            inner.global_callbacks(&global_name)
+                .map(Iterator::collect) 
+        })
+    }
 }
 
 impl From<slint_interpreter::ComponentInstance> for ComponentInstance {
