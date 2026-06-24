@@ -245,6 +245,13 @@ impl ComponentDefinition {
                 .map(Iterator::collect) 
         })
     }
+
+    pub fn global_functions(&self, global_name: String) -> Option<Vec<String>> {
+        self.with(|inner| {
+            inner.global_functions(&global_name)
+                .map(Iterator::collect) 
+        })
+    }
 }
 
 impl From<slint_interpreter::ComponentInstance> for ComponentInstance {

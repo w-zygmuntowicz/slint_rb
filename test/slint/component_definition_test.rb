@@ -57,6 +57,11 @@ module Slint
       assert_nil(@component_definition.global_callbacks("MyNonExistentGlobal"))
     end
 
+    def test_global_functions
+      assert_equal(["my-global-fun"], @component_definition.global_functions("MyGlobal"))
+      assert_nil(@component_definition.global_functions("MyNonExistentGlobal"))
+    end
+
     private
 
     def source
@@ -66,6 +71,8 @@ module Slint
           in-out property<bool> bool-prop;
 
           callback hello-callback;
+
+          public function my-global-fun() {}
         }
 
         export component MyAppName inherits Window {
