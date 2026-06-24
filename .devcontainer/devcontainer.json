@@ -18,10 +18,10 @@
         }
     },
     "features": {
-        "ghcr.io/devcontainers/features/rust:1": {},
+        "ghcr.io/devcontainers/features/rust:1": {
+            "version": "1.92"
+        },
         "ghcr.io/devcontainers/features/desktop-lite": {}
-        // Library libxkbcommon-x11.so could not be loaded.
-        // sudo apt update && sudo apt install libxkbcommon-x11-0
     },
     "portsAttributes": {
         "6080": {

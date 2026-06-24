@@ -1,7 +1,7 @@
 [package]
 name = "slint_rb"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["Wojciech Zygmuntowicz <wzygmuntowicz.zygmuntowicz@gmail.com>"]
 license = "MIT"
 publish = false
@@ -10,10 +10,10 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-i-slint-backend-selector = "1.8.0"
-i-slint-compiler = "1.8.0"
-i-slint-core = "1.8.0"
+i-slint-backend-selector = "1.17.0"
+i-slint-compiler = "1.17.0"
+i-slint-core = "1.17.0"
 magnus = { version = "0.8.2" }
-slint = "1.8.0"
-slint-interpreter = "1.8.0"
+slint = "1.17.0"
+slint-interpreter = "1.17.0"
 spin_on = "0.1.1"
