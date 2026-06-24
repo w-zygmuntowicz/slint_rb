@@ -50,8 +50,16 @@ impl Compiler {
         Self::default()
     }
 
+    fn with<R>(&self, f: impl FnOnce(&slint_interpreter::Compiler) -> R) -> R {
+        self.compiler.with(f)
+    }
+
+    fn with_mut<R>(&self, f: impl FnOnce(&mut slint_interpreter::Compiler) -> R) -> R {
+        self.compiler.with_mut(f)
+    }
+
     pub fn build_from_path(&self, path: PathBuf) -> CompilationResult {
-        self.compiler.with(|inner| {
+        self.with(|inner| {
             let future = inner.build_from_path(path);
             let result = spin_on::spin_on(future);
             result.into()
@@ -59,7 +67,7 @@ impl Compiler {
     }
 
     pub fn build_from_source(&self, source_code: String, path: PathBuf) -> CompilationResult {
-        self.compiler.with(|inner| {
+        self.with(|inner| {
             let future = inner.build_from_source(source_code, path);
             let result = spin_on::spin_on(future);
             result.into()
@@ -67,43 +75,47 @@ impl Compiler {
     }
 
     pub fn include_paths(&self) -> Vec<PathBuf> {
-        self.compiler.with(|inner| { inner.include_paths().to_vec() })
+        self.with(|inner| inner.include_paths().to_vec())
     }
 
     pub fn set_include_paths(&self, include_paths: Vec<PathBuf>) {
-        self.compiler.with_mut(|inner| inner.set_include_paths(include_paths))
+        self.with_mut(|inner| inner.set_include_paths(include_paths))
     }
 
     pub fn library_paths(&self) -> HashMap<String, PathBuf> {
-        self.compiler.with(|inner| { inner.library_paths().clone() })
+        self.with(|inner| inner.library_paths().clone())
     }
 
     pub fn set_library_paths(&self, library_paths: HashMap<String, PathBuf>) {
-        self.compiler.with_mut(|inner| inner.set_library_paths(library_paths))
+        self.with_mut(|inner| inner.set_library_paths(library_paths))
     }
 
     pub fn style(&self) -> Option<String> {
-        self.compiler.with(|inner| inner.style().cloned())
+        self.with(|inner| inner.style().cloned())
     }
 
     pub fn set_style(&self, style: String) {
-        self.compiler.with_mut(|inner| inner.set_style(style))
+        self.with_mut(|inner| inner.set_style(style))
     }
 }
 
 impl CompilationResult {
+    fn with<R>(&self, f: impl FnOnce(&slint_interpreter::CompilationResult) -> R) -> R {
+        self.result.with(f)
+    }
+
     pub fn valid(&self) -> bool {
-        self.result.with(|inner| !inner.has_errors())
+        self.with(|inner| !inner.has_errors())
     }
 
     pub fn diagnostics(ruby: &Ruby, rb_self: &Self) -> RArray {
-        rb_self.result.with(|inner| {
+        rb_self.with(|inner| {
             ruby.ary_from_iter(inner.diagnostics().map(Diagnostic::from))
         })
     }
 
     pub fn component_names(&self) -> Vec<String> {
-        self.result.with(|inner| {
+        self.with(|inner| {
             inner
                 .component_names()
                 .map(|name| name.to_string())
@@ -112,7 +124,7 @@ impl CompilationResult {
     }
 
     pub fn components(ruby: &Ruby, rb_self: &Self) -> RArray {
-        rb_self.result.with(|inner| {
+        rb_self.with(|inner| {
             ruby.ary_from_iter(inner.components().map(ComponentDefinition::from))
         })
     }
@@ -124,8 +136,12 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
+    fn with<R>(&self, f: impl FnOnce(&slint_interpreter::Diagnostic) -> R) -> R {
+        self.diagnostic.with(f)
+    }
+
     pub fn level(ruby: &Ruby, rb_self: &Self) -> magnus::StaticSymbol {
-        rb_self.diagnostic.with(|inner| {
+        rb_self.with(|inner| {
             match inner.level() {
                 slint_interpreter::DiagnosticLevel::Error => ruby.sym_new("error"),
                 slint_interpreter::DiagnosticLevel::Warning => ruby.sym_new("warning"),
@@ -135,15 +151,15 @@ impl Diagnostic {
     }
 
     pub fn message(&self) -> String {
-        self.diagnostic.with(|inner| inner.message().to_string())
+        self.with(|inner| inner.message().to_string())
     }
 
     pub fn line_column(&self) -> (usize, usize) {
-        self.diagnostic.with(|inner| inner.line_column())
+        self.with(|inner| inner.line_column())
     }
 
     pub fn source_file(&self) -> Option<PathBuf> {
-        self.diagnostic.with(|inner| inner.source_file().map(Path::to_path_buf))
+        self.with(|inner| inner.source_file().map(Path::to_path_buf))
     }
 }
 
@@ -153,8 +169,12 @@ pub struct ComponentDefinition {
 }
 
 impl ComponentDefinition {
+    fn with<R>(&self, f: impl FnOnce(&slint_interpreter::ComponentDefinition) -> R) -> R {
+        self.definition.with(f)
+    }
+
     pub fn create(ruby: &Ruby, rb_self: &Self) -> Result<ComponentInstance, magnus::Error> {
-        rb_self.definition.with(|inner| {
+        rb_self.with(|inner| {
             match inner.create() {
                 Ok(instance) => Ok(instance.into()),
                 Err(e) => Err(magnus::Error::new(ruby.exception_standard_error(), e.to_string())),
@@ -163,19 +183,19 @@ impl ComponentDefinition {
     }
 
     pub fn name(&self) -> String {
-        self.definition.with(|inner| inner.name().to_string())
+        self.with(|inner| inner.name().to_string())
     }
 
     pub fn callbacks(&self) -> Vec<String> {
-        self.definition.with(|inner| inner.callbacks().collect())
+        self.with(|inner| inner.callbacks().collect())
     }
 
     pub fn functions(&self) -> Vec<String> {
-        self.definition.with(|inner| inner.functions().collect())
+        self.with(|inner| inner.functions().collect())
     }
 
     pub fn properties(ruby: &Ruby, rb_self: &Self) -> Result<magnus::RHash, magnus::Error> {
-        rb_self.definition.with(|inner| {
+        rb_self.with(|inner| {
             Self::properties_to_hash(ruby, inner.properties())
         })
     }
@@ -208,11 +228,11 @@ impl ComponentDefinition {
     }
 
     pub fn globals(&self) -> Vec<String> {
-        self.definition.with(|inner| inner.globals().collect())
+        self.with(|inner| inner.globals().collect())
     }
 
     pub fn global_properties(ruby: &Ruby, rb_self: &Self, global_name: String) -> Result<Option<magnus::RHash>, magnus::Error> {
-        rb_self.definition.with(|inner| {
+        rb_self.with(|inner| {
             inner.global_properties(&global_name)
                 .map(|props| Self::properties_to_hash(ruby, props))
                 .transpose()
@@ -234,7 +254,11 @@ pub struct ComponentInstance {
 }
 
 impl ComponentInstance {
+    fn with<R>(&self, f: impl FnOnce(&slint_interpreter::ComponentInstance) -> R) -> R {
+        self.instance.with(f)
+    }
+
     pub fn render(&self) {
-        self.instance.with(|inner| inner.run().unwrap())
+        self.with(|inner| inner.run().unwrap())
     }
 }
