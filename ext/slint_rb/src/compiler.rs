@@ -176,13 +176,21 @@ impl ComponentDefinition {
 
     pub fn properties(ruby: &Ruby, rb_self: &Self) -> Result<magnus::RHash, magnus::Error> {
         rb_self.definition.with(|inner| {
-            inner.properties()
-                .map(|(name, val_type)| (name, Self::value_type_to_symbol(ruby, &val_type)))
-                .try_fold(ruby.hash_new(), |acc, (name, val_type)| {
-                    acc.aset(name, val_type)?;
-                    Ok(acc)
-                })
+            Self::properties_to_hash(ruby, inner.properties())
         })
+    }
+
+    fn properties_to_hash(
+        ruby: &Ruby,
+        props: impl IntoIterator<Item = (String, slint_interpreter::ValueType)>,
+    ) -> Result<magnus::RHash, magnus::Error> {
+        props
+            .into_iter()
+            .map(|(name, val_type)| (name, Self::value_type_to_symbol(ruby, &val_type)))
+            .try_fold(ruby.hash_new(), |acc, (name, val_type)| {
+                acc.aset(name, val_type)?;
+                Ok(acc)
+            })
     }
 
     fn value_type_to_symbol(ruby: &Ruby, value_type: &slint_interpreter::ValueType) -> magnus::StaticSymbol {
@@ -201,6 +209,14 @@ impl ComponentDefinition {
 
     pub fn globals(&self) -> Vec<String> {
         self.definition.with(|inner| inner.globals().collect())
+    }
+
+    pub fn global_properties(ruby: &Ruby, rb_self: &Self, global_name: String) -> Result<Option<magnus::RHash>, magnus::Error> {
+        rb_self.definition.with(|inner| {
+            inner.global_properties(&global_name)
+                .map(|props| Self::properties_to_hash(ruby, props))
+                .transpose()
+        })
     }
 }
 

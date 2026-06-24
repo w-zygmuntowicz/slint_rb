@@ -42,13 +42,23 @@ module Slint
       assert_equal(["MyGlobal"], @component_definition.globals)
     end
 
+    def test_global_properties
+      expected = {
+        "text-prop" => :string,
+        "bool-prop" => :bool
+      }
+
+      assert_equal(expected, @component_definition.global_properties("MyGlobal"))
+      assert_nil(@component_definition.global_properties("MyNonExistentGlobal"))
+    end
+
     private
 
     def source
       <<~SLINT
         export global MyGlobal  {
-          in-out property<color> primary: blue;
-          in-out property<color> secondary: green;
+          in-out property<string> text-prop;
+          in-out property<bool> bool-prop;
         }
 
         export component MyAppName inherits Window {

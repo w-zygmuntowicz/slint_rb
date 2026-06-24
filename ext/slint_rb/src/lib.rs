@@ -67,6 +67,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     component_definition_class.define_method("functions", method!(compiler::ComponentDefinition::functions, 0))?;
     component_definition_class.define_method("properties", method!(compiler::ComponentDefinition::properties, 0))?;
     component_definition_class.define_method("globals", method!(compiler::ComponentDefinition::globals, 0))?;
+    component_definition_class.define_method("global_properties", method!(compiler::ComponentDefinition::global_properties, 1))?;
 
     let component_instance_class = module.define_class("ComponentInstance", ruby.class_object())?;
     component_instance_class.define_method("render", method!(compiler::ComponentInstance::render, 0))?;
