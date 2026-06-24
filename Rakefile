@@ -19,4 +19,4 @@ RbSys::ExtensionTask.new("slint_rb", GEMSPEC) do |ext|
   ext.lib_dir = "lib/slint_rb"
 end
 
-task default: %i[compile test rubocop]
+task default: %i[compile:dev test rubocop]
