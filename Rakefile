@@ -11,6 +11,7 @@ RuboCop::RakeTask.new
 
 require "rb_sys/extensiontask"
 
+desc "Compiles rust extension"
 task build: :compile
 
 GEMSPEC = Gem::Specification.load("slint_rb.gemspec")
