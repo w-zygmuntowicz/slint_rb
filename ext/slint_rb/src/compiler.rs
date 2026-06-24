@@ -272,6 +272,10 @@ impl ComponentInstance {
         self.instance.with(f)
     }
 
+    pub fn definition(&self) -> ComponentDefinition {
+        self.with(|inner| inner.definition().into())
+    }
+
     pub fn render(&self) {
         self.with(|inner| inner.run().unwrap())
     }
