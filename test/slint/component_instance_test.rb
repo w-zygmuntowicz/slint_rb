@@ -14,7 +14,7 @@ module Slint
       assert_equal(component_definition.name, component_instance.definition.name)
     end
 
-    def test_get_property_for_int_string
+    def test_get_property
       compiler = Compiler.new
       compilation_result = compiler.build_from_source(source, "")
       component_definition = compilation_result.components.first
