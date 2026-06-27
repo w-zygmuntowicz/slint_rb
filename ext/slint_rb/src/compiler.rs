@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 
 use crate::sendable_wrapper::SendableWrapper;
 
+type RbResult<T> = Result<T, magnus::Error>;
+
 #[magnus::wrap(class = "Slint::Compiler")]
 pub struct Compiler {
     compiler: SendableWrapper<slint_interpreter::Compiler>
@@ -174,7 +176,7 @@ impl ComponentDefinition {
         self.definition.with(f)
     }
 
-    pub fn create(ruby: &Ruby, rb_self: &Self) -> Result<ComponentInstance, magnus::Error> {
+    pub fn create(ruby: &Ruby, rb_self: &Self) -> RbResult<ComponentInstance> {
         rb_self.with(|inner| {
             match inner.create() {
                 Ok(instance) => Ok(instance.into()),
@@ -195,7 +197,7 @@ impl ComponentDefinition {
         self.with(|inner| inner.functions().collect())
     }
 
-    pub fn properties(ruby: &Ruby, rb_self: &Self) -> Result<magnus::RHash, magnus::Error> {
+    pub fn properties(ruby: &Ruby, rb_self: &Self) -> RbResult<magnus::RHash> {
         rb_self.with(|inner| {
             Self::properties_to_hash(ruby, inner.properties())
         })
@@ -204,7 +206,7 @@ impl ComponentDefinition {
     fn properties_to_hash(
         ruby: &Ruby,
         props: impl IntoIterator<Item = (String, slint_interpreter::ValueType)>,
-    ) -> Result<magnus::RHash, magnus::Error> {
+    ) -> RbResult<magnus::RHash> {
         props
             .into_iter()
             .map(|(name, val_type)| (name, Self::value_type_to_symbol(ruby, &val_type)))
@@ -232,7 +234,7 @@ impl ComponentDefinition {
         self.with(|inner| inner.globals().collect())
     }
 
-    pub fn global_properties(ruby: &Ruby, rb_self: &Self, global_name: String) -> Result<Option<magnus::RHash>, magnus::Error> {
+    pub fn global_properties(ruby: &Ruby, rb_self: &Self, global_name: String) -> RbResult<Option<magnus::RHash>> {
         rb_self.with(|inner| {
             inner.global_properties(&global_name)
                 .map(|props| Self::properties_to_hash(ruby, props))
@@ -277,7 +279,7 @@ impl ComponentInstance {
         self.with(|inner| inner.definition().into())
     }
 
-    pub fn get_property(ruby: &Ruby, rb_self: &Self, property_name: String) -> Result<magnus::Value, magnus::Error> {
+    pub fn get_property(ruby: &Ruby, rb_self: &Self, property_name: String) -> RbResult<magnus::Value> {
         rb_self.with(|inner| {
             inner
                 .get_property(&property_name)
@@ -286,7 +288,7 @@ impl ComponentInstance {
         })
     }
 
-    fn try_property_value_into_ruby_value(ruby: &Ruby, property: &Value) -> Result<magnus::Value, magnus::Error> {
+    fn try_property_value_into_ruby_value(ruby: &Ruby, property: &Value) -> RbResult<magnus::Value> {
         match property {
             Value::Number(number) => Ok(ruby.into_value(*number)),
             Value::String(text) => Ok(ruby.into_value(text.as_str())),
