@@ -45,6 +45,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
 
     let component_instance_class = module.define_class("ComponentInstance", ruby.class_object())?;
     component_instance_class.define_method("definition", method!(compiler::ComponentInstance::definition, 0))?;
+    component_instance_class.define_method("get_property", method!(compiler::ComponentInstance::get_property, 1))?;
     component_instance_class.define_method("render", method!(compiler::ComponentInstance::render, 0))?;
     Ok(())
 }

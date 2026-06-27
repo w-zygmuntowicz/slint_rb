@@ -1,5 +1,6 @@
 use magnus::{RArray, Ruby};
-use slint_interpreter::ComponentHandle;
+use slint_interpreter::{ComponentHandle};
+use slint_interpreter::Value;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -274,6 +275,58 @@ impl ComponentInstance {
 
     pub fn definition(&self) -> ComponentDefinition {
         self.with(|inner| inner.definition().into())
+    }
+
+    pub fn get_property(ruby: &Ruby, rb_self: &Self, property_name: String) -> Result<magnus::Value, magnus::Error> {
+        rb_self.with(|inner| {
+            inner
+                .get_property(&property_name)
+                .map_err(|e| magnus::Error::new(ruby.exception_standard_error(), e.to_string()))
+                .map(|property| Self::try_property_value_into_ruby_value(ruby, &property))?
+        })
+    }
+
+    fn try_property_value_into_ruby_value(ruby: &Ruby, property: &Value) -> Result<magnus::Value, magnus::Error> {
+        match property {
+            Value::Number(number) => Ok(ruby.into_value(*number)),
+            Value::String(text) => Ok(ruby.into_value(text.as_str())),
+            Value::Bool(value) => Ok(ruby.into_value(*value)),
+            _ => Err(magnus::Error::new(ruby.exception_not_imp_error(), "Property mapping to ruby not implemented yet for this type"))
+            // /// There is nothing in this value. That's the default.
+            // /// For example, a function that does not return a result would return a Value::Void
+            // #[default]
+            // Void = 0,
+            // /// A model (that includes array in .slint)
+            // Model(ModelRc<Value>) = 5,
+            // /// An object
+            // Struct(Struct) = 6,
+            // /// Correspond to `brush` or `color` type in .slint.  For color, this is then a [`Brush::SolidColor`]
+            // Brush(Brush) = 7,
+            // #[doc(hidden)]
+            // /// The elements of a path
+            // PathData(PathData) = 8,
+            // #[doc(hidden)]
+            // /// An easing curve
+            // EasingCurve(i_slint_core::animations::EasingCurve) = 9,
+            // #[doc(hidden)]
+            // /// An enumeration, like `TextHorizontalAlignment::align_center`, represented by `("TextHorizontalAlignment", "align_center")`.
+            // /// FIXME: consider representing that with a number?
+            // EnumerationValue(String, String) = 10,
+            // #[doc(hidden)]
+            // LayoutCache(SharedVector<f32>) = 11,
+            // #[doc(hidden)]
+            // /// Correspond to the `component-factory` type in .slint
+            // ComponentFactory(ComponentFactory) = 12,
+            // #[doc(hidden)] // make visible when we make StyledText public
+            // /// Correspond to the `styled-text` type in .slint
+            // StyledText(StyledText) = 13,
+            // #[doc(hidden)]
+            // ArrayOfU16(SharedVector<u16>) = 14,
+            // /// Correspond to the `keys` type in .slint
+            // Keys(Keys) = 15,
+            // /// Correspond to the `data-transfer` type in .slint
+            // DataTransfer(DataTransfer) = 16,
+        }
     }
 
     pub fn render(&self) {
