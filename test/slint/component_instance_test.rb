@@ -28,6 +28,16 @@ module Slint
       # assert_equal(some_image, component_instance.get_property("some_image"))
     end
 
+    def test_get_property_raises_proper_error
+      compiler = Compiler.new
+      compilation_result = compiler.build_from_source(source, "")
+      component_definition = compilation_result.components.first
+      component_instance = component_definition.create
+
+      assert_raises(Slint::Error) { component_instance.get_property("dupa") }
+      assert_raises(Slint::Error) { component_instance.get_property("col_prop") }
+    end
+
     private
 
     def source

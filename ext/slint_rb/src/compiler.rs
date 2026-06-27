@@ -1,4 +1,4 @@
-use magnus::{RArray, Ruby};
+use magnus::{Module, RArray, Ruby};
 use slint_interpreter::{ComponentHandle};
 use slint_interpreter::Value;
 use std::collections::HashMap;
@@ -7,6 +7,22 @@ use std::path::{Path, PathBuf};
 use crate::sendable_wrapper::SendableWrapper;
 
 type RbResult<T> = Result<T, magnus::Error>;
+
+struct SlintError {}
+
+impl SlintError {
+    fn new_err(msg: String) -> magnus::Error {
+        let class = Ruby::get()
+            .unwrap()
+            .class_object()
+            .const_get::<_, magnus::RModule>("Slint")
+            .unwrap()
+            .const_get("Error")
+            .unwrap();
+
+        magnus::Error::new(class, msg)
+    }
+}
 
 #[magnus::wrap(class = "Slint::Compiler")]
 pub struct Compiler {
@@ -176,11 +192,11 @@ impl ComponentDefinition {
         self.definition.with(f)
     }
 
-    pub fn create(ruby: &Ruby, rb_self: &Self) -> RbResult<ComponentInstance> {
-        rb_self.with(|inner| {
+    pub fn create(&self) -> RbResult<ComponentInstance> {
+        self.with(|inner| {
             match inner.create() {
                 Ok(instance) => Ok(instance.into()),
-                Err(e) => Err(magnus::Error::new(ruby.exception_standard_error(), e.to_string())),
+                Err(e) => Err(SlintError::new_err(e.to_string())),
             }
         })
     }
@@ -211,7 +227,7 @@ impl ComponentDefinition {
             .into_iter()
             .map(|(name, val_type)| (name, Self::value_type_to_symbol(ruby, &val_type)))
             .try_fold(ruby.hash_new(), |acc, (name, val_type)| {
-                acc.aset(name, val_type)?;
+                acc.aset(name, val_type).map_err(|e| SlintError::new_err(e.to_string()))?;
                 Ok(acc)
             })
     }
@@ -239,6 +255,7 @@ impl ComponentDefinition {
             inner.global_properties(&global_name)
                 .map(|props| Self::properties_to_hash(ruby, props))
                 .transpose()
+                .map_err(|e| SlintError::new_err(e.to_string()))
         })
     }
 
@@ -283,7 +300,7 @@ impl ComponentInstance {
         rb_self.with(|inner| {
             inner
                 .get_property(&property_name)
-                .map_err(|e| magnus::Error::new(ruby.exception_standard_error(), e.to_string()))
+                .map_err(|e| SlintError::new_err(e.to_string()))
                 .map(|property| Self::try_property_value_into_ruby_value(ruby, &property))?
         })
     }
@@ -293,7 +310,8 @@ impl ComponentInstance {
             Value::Number(number) => Ok(ruby.into_value(*number)),
             Value::String(text) => Ok(ruby.into_value(text.as_str())),
             Value::Bool(value) => Ok(ruby.into_value(*value)),
-            _ => Err(magnus::Error::new(ruby.exception_not_imp_error(), "Property mapping to ruby not implemented yet for this type"))
+            _ => Err(SlintError::new_err("Property mapping to ruby not implemented yet for this type".to_string()))
+
             // /// There is nothing in this value. That's the default.
             // /// For example, a function that does not return a result would return a Value::Void
             // #[default]
