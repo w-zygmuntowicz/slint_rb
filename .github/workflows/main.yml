@@ -1,29 +1,23 @@
-name: Ruby
+name: CI
 
 on:
   push:
     branches:
       - master
-
   pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
-    strategy:
-      matrix:
-        ruby:
-          - '3.3.5'
+    name: Build & Test in Dev Container
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Ruby & Rust
-      uses: oxidize-rb/actions/setup-ruby-and-rust@v1
+
+    - name: Create dummy SSH directory to prevent bind mount error
+      run: mkdir -p ~/.ssh
+
+    - name: Run tests in Dev Container
+      uses: devcontainers/ci-action@v1
       with:
-        ruby-version: ${{ matrix.ruby }}
-        bundler-cache: true
-        cargo-cache: true
-        rubygems: '3.5.16'
-    - name: Run the default task
-      run: bundle exec rake
+        runCmd: bundle exec rake
