@@ -11,3 +11,6 @@ Style/StringLiterals:
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+Minitest/MultipleAssertions:
+  Enabled: false

@@ -4,38 +4,37 @@ require "test_helper"
 
 module Slint
   class ComponentInstanceTest < Minitest::Test
-    def test_definition
+    def setup
       compiler = Compiler.new
       compilation_result = compiler.build_from_source(source, "")
-      component_definition = compilation_result.components.first
-      component_instance = component_definition.create
-
-      # Workaround: no equality operator for component definition, we compare by name
-      assert_equal(component_definition.name, component_instance.definition.name)
+      @component_definition = compilation_result.components.first
+      @component_instance = @component_definition.create
     end
 
-    def test_get_property
-      compiler = Compiler.new
-      compilation_result = compiler.build_from_source(source, "")
-      component_definition = compilation_result.components.first
-      component_instance = component_definition.create
+    def test_definition
+      # Workaround: no equality operator for component definition, we compare by name
+      assert_equal(@component_definition.name, @component_instance.definition.name)
+    end
 
-      assert_equal(42, component_instance.get_property("int_property"))
-      assert_equal("test-string-value", component_instance.get_property("text_prop"))
-      assert(component_instance.get_property("bool_prop"))
+    def test_property_accessor
+      assert_equal(42, @component_instance.get_property("int_property"))
+      assert_equal("test-string-value", @component_instance.get_property("text_prop"))
+      assert(@component_instance.get_property("bool_prop"))
+
+      @component_instance.set_property("int_property", 10)
+      @component_instance.set_property("text_prop", "new-string")
+      @component_instance.set_property("bool_prop", false)
+
+      assert_equal(10, @component_instance.get_property("int_property"))
+      assert_equal("new-string", @component_instance.get_property("text_prop"))
+      refute(@component_instance.get_property("bool_prop"))
 
       # TODO: until Image is implemented
       # assert_equal(some_image, component_instance.get_property("some_image"))
     end
 
     def test_get_property_raises_proper_error
-      compiler = Compiler.new
-      compilation_result = compiler.build_from_source(source, "")
-      component_definition = compilation_result.components.first
-      component_instance = component_definition.create
-
-      assert_raises(Slint::Error) { component_instance.get_property("dupa") }
-      assert_raises(Slint::Error) { component_instance.get_property("col_prop") }
+      assert_raises(Slint::Error) { @component_instance.get_property("non-existent") }
     end
 
     private

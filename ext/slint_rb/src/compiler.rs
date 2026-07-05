@@ -1,3 +1,4 @@
+use magnus::prelude::*;
 use magnus::{Module, RArray, Ruby};
 use slint_interpreter::{ComponentHandle};
 use slint_interpreter::Value;
@@ -303,6 +304,40 @@ impl ComponentInstance {
                 .map_err(|e| SlintError::new_err(e.to_string()))
                 .map(|property| Self::try_property_value_into_ruby_value(ruby, &property))?
         })
+    }
+
+    pub fn set_property(ruby: &Ruby, rb_self: &Self, property_name: String, new_value: magnus::Value) -> RbResult<magnus::Value> {
+        rb_self.with(|inner| {
+            let old_value = inner
+                .get_property(&property_name)
+                .map_err(|e| SlintError::new_err(e.to_string()))?;
+            let converted_value = Self::try_property_value_from_ruby_value(ruby, old_value, new_value)?;
+            inner
+                .set_property(&property_name, converted_value)
+                .map_err(|e| SlintError::new_err(e.to_string()))?;
+            Ok(new_value)
+        })
+    }
+
+    fn try_property_value_from_ruby_value(_ruby: &Ruby, old_value: Value, value: magnus::Value) -> RbResult<Value> {
+        match old_value {
+            Value::Number(_) => {
+                let val = f64::try_convert(value)?;
+                Ok(Value::Number(val))
+            }
+            Value::String(_) => {
+                let val = String::try_convert(value)?;
+                Ok(Value::String(val.into()))
+            }
+            Value::Bool(_) => {
+                let val = bool::try_convert(value)?;
+                Ok(Value::Bool(val))
+            }
+            _ => Err(SlintError::new_err(format!(
+                "Setting property of type {:?} is not supported yet",
+                old_value
+            ))),
+        }
     }
 
     fn try_property_value_into_ruby_value(ruby: &Ruby, property: &Value) -> RbResult<magnus::Value> {
