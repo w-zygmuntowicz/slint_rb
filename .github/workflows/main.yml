@@ -18,6 +18,6 @@ jobs:
       run: mkdir -p ~/.ssh
 
     - name: Run tests in Dev Container
-      uses: devcontainers/ci-action@v1
+      uses: devcontainers/ci@v0.3
       with:
         runCmd: bundle exec rake
