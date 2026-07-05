@@ -37,10 +37,29 @@ module Slint
       assert_raises(Slint::Error) { @component_instance.get_property("non-existent") }
     end
 
+    def test_get_global_property
+      assert_equal(100, @component_instance.get_global_property("Glob", "my_global_property"))
+      assert_equal("global-string-value", @component_instance.get_global_property("Glob", "global_text_prop"))
+      refute(@component_instance.get_global_property("Glob", "global_bool_prop"))
+    end
+
+    def test_get_global_property_raises_proper_error
+      assert_raises(Slint::Error) { @component_instance.get_global_property("Glob", "non-existent") }
+      assert_raises(Slint::Error) { @component_instance.get_global_property("NonExistent", "my_global_property") }
+    end
+
     private
 
     def source
       <<~SLINT
+        global Glob {
+          in-out property <int> my_global_property: 100;
+          in-out property <string> global_text_prop: "global-string-value";
+          in-out property <bool> global_bool_prop: false;
+          in-out property <color> global_col_prop: #ffaaff;
+        }
+
+        export { Glob }
         export component App inherits Window {
           in-out property <int> int_property: 42;
           in-out property <string> text_prop: "test-string-value";

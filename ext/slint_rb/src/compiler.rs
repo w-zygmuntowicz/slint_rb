@@ -306,6 +306,20 @@ impl ComponentInstance {
         })
     }
 
+    pub fn get_global_property(
+        ruby: &Ruby,
+        rb_self: &Self,
+        global_name: String,
+        property_name: String,
+    ) -> RbResult<magnus::Value> {
+        rb_self.with(|inner| {
+            inner
+                .get_global_property(&global_name, &property_name)
+                .map_err(|e| SlintError::new_err(e.to_string()))
+                .map(|property| Self::try_property_value_into_ruby_value(ruby, &property))?
+        })
+    }
+
     pub fn set_property(ruby: &Ruby, rb_self: &Self, property_name: String, new_value: magnus::Value) -> RbResult<magnus::Value> {
         rb_self.with(|inner| {
             let old_value = inner
