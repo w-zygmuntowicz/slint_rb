@@ -333,6 +333,25 @@ impl ComponentInstance {
         })
     }
 
+    pub fn set_global_property(
+        ruby: &Ruby,
+        rb_self: &Self,
+        global_name: String,
+        property_name: String,
+        new_value: magnus::Value,
+    ) -> RbResult<magnus::Value> {
+        rb_self.with(|inner| {
+            let old_value = inner
+                .get_global_property(&global_name, &property_name)
+                .map_err(|e| SlintError::new_err(e.to_string()))?;
+            let converted_value = Self::try_property_value_from_ruby_value(ruby, old_value, new_value)?;
+            inner
+                .set_global_property(&global_name, &property_name, converted_value)
+                .map_err(|e| SlintError::new_err(e.to_string()))?;
+            Ok(new_value)
+        })
+    }
+
     fn try_property_value_from_ruby_value(_ruby: &Ruby, old_value: Value, value: magnus::Value) -> RbResult<Value> {
         match old_value {
             Value::Number(_) => {

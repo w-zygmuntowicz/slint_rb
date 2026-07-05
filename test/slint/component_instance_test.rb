@@ -31,21 +31,26 @@ module Slint
 
       # TODO: until Image is implemented
       # assert_equal(some_image, component_instance.get_property("some_image"))
-    end
-
-    def test_get_property_raises_proper_error
       assert_raises(Slint::Error) { @component_instance.get_property("non-existent") }
     end
 
-    def test_get_global_property
+    def test_global_property_accessor # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
       assert_equal(100, @component_instance.get_global_property("Glob", "my_global_property"))
       assert_equal("global-string-value", @component_instance.get_global_property("Glob", "global_text_prop"))
       refute(@component_instance.get_global_property("Glob", "global_bool_prop"))
-    end
 
-    def test_get_global_property_raises_proper_error
+      @component_instance.set_global_property("Glob", "my_global_property", 200)
+      @component_instance.set_global_property("Glob", "global_text_prop", "new-global-string")
+      @component_instance.set_global_property("Glob", "global_bool_prop", true)
+
+      assert_equal(200, @component_instance.get_global_property("Glob", "my_global_property"))
+      assert_equal("new-global-string", @component_instance.get_global_property("Glob", "global_text_prop"))
+      assert(@component_instance.get_global_property("Glob", "global_bool_prop"))
+
       assert_raises(Slint::Error) { @component_instance.get_global_property("Glob", "non-existent") }
       assert_raises(Slint::Error) { @component_instance.get_global_property("NonExistent", "my_global_property") }
+      assert_raises(Slint::Error) { @component_instance.set_global_property("Glob", "non-existent", 10) }
+      assert_raises(Slint::Error) { @component_instance.set_global_property("NonExistent", "my_global_property", 10) }
     end
 
     private
