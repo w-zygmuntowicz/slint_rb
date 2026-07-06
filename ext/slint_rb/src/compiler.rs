@@ -302,7 +302,7 @@ impl ComponentInstance {
             inner
                 .get_property(&property_name)
                 .map_err(|e| SlintError::new_err(e.to_string()))
-                .map(|property| Self::try_property_value_into_ruby_value(ruby, &property))?
+                .map(|property| Self::try_slint_value_into_ruby_value(ruby, &property))?
         })
     }
 
@@ -316,7 +316,7 @@ impl ComponentInstance {
             inner
                 .get_global_property(&global_name, &property_name)
                 .map_err(|e| SlintError::new_err(e.to_string()))
-                .map(|property| Self::try_property_value_into_ruby_value(ruby, &property))?
+                .map(|property| Self::try_slint_value_into_ruby_value(ruby, &property))?
         })
     }
 
@@ -325,7 +325,7 @@ impl ComponentInstance {
             let old_value = inner
                 .get_property(&property_name)
                 .map_err(|e| SlintError::new_err(e.to_string()))?;
-            let converted_value = Self::try_property_value_from_ruby_value(ruby, old_value, new_value)?;
+            let converted_value = Self::try_slint_value_from_ruby_value(ruby, old_value, new_value)?;
             inner
                 .set_property(&property_name, converted_value)
                 .map_err(|e| SlintError::new_err(e.to_string()))?;
@@ -344,7 +344,7 @@ impl ComponentInstance {
             let old_value = inner
                 .get_global_property(&global_name, &property_name)
                 .map_err(|e| SlintError::new_err(e.to_string()))?;
-            let converted_value = Self::try_property_value_from_ruby_value(ruby, old_value, new_value)?;
+            let converted_value = Self::try_slint_value_from_ruby_value(ruby, old_value, new_value)?;
             inner
                 .set_global_property(&global_name, &property_name, converted_value)
                 .map_err(|e| SlintError::new_err(e.to_string()))?;
@@ -352,7 +352,7 @@ impl ComponentInstance {
         })
     }
 
-    fn try_property_value_from_ruby_value(_ruby: &Ruby, old_value: Value, value: magnus::Value) -> RbResult<Value> {
+    fn try_slint_value_from_ruby_value(_ruby: &Ruby, old_value: Value, value: magnus::Value) -> RbResult<Value> {
         match old_value {
             Value::Number(_) => {
                 let val = f64::try_convert(value)?;
@@ -373,7 +373,7 @@ impl ComponentInstance {
         }
     }
 
-    fn try_property_value_into_ruby_value(ruby: &Ruby, property: &Value) -> RbResult<magnus::Value> {
+    fn try_slint_value_into_ruby_value(ruby: &Ruby, property: &Value) -> RbResult<magnus::Value> {
         match property {
             Value::Number(number) => Ok(ruby.into_value(*number)),
             Value::String(text) => Ok(ruby.into_value(text.as_str())),
