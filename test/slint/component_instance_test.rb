@@ -21,6 +21,7 @@ module Slint
       assert_in_delta(110.0, @component_instance.get_property("float_prop"))
       assert_equal("test-string-value", @component_instance.get_property("text_prop"))
       assert(@component_instance.get_property("bool_prop"))
+      assert_instance_of(Brush, @component_instance.get_property("col_prop"))
 
       @component_instance.set_property("int_property", 10)
       @component_instance.set_property("float_prop", 10.5)

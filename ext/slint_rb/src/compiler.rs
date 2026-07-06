@@ -155,6 +155,19 @@ pub struct Diagnostic {
     diagnostic: SendableWrapper<slint_interpreter::Diagnostic>
 }
 
+#[magnus::wrap(class = "Slint::Brush")]
+pub struct Brush {
+    brush: SendableWrapper<slint_interpreter::Brush>
+}
+
+impl From<slint_interpreter::Brush> for Brush {
+    fn from(brush: slint_interpreter::Brush) -> Self {
+        Self {
+            brush: SendableWrapper::new(brush)
+        }
+    }
+}
+
 impl Diagnostic {
     fn with<R>(&self, f: impl FnOnce(&slint_interpreter::Diagnostic) -> R) -> R {
         self.diagnostic.with(f)
@@ -378,6 +391,7 @@ impl ComponentInstance {
             Value::Number(number) => Ok(ruby.into_value(*number)),
             Value::String(text) => Ok(ruby.into_value(text.as_str())),
             Value::Bool(value) => Ok(ruby.into_value(*value)),
+            Value::Brush(brush) => Ok(ruby.into_value(Brush::from(brush.clone()))),
             _ => Err(SlintError::new_err("Property mapping to ruby not implemented yet for this type".to_string()))
 
             // /// There is nothing in this value. That's the default.
