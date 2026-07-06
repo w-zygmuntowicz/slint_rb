@@ -2,14 +2,11 @@
 
 require "bundler/gem_tasks"
 require "minitest/test_task"
+require "rubocop/rake_task"
+require "rb_sys/extensiontask"
 
 Minitest::TestTask.create
-
-require "rubocop/rake_task"
-
 RuboCop::RakeTask.new
-
-require "rb_sys/extensiontask"
 
 desc "Compiles rust extension"
 task build: :compile
