@@ -50,5 +50,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     component_instance_class.define_method("get_global_property", method!(compiler::ComponentInstance::get_global_property, 2))?;
     component_instance_class.define_method("set_global_property", method!(compiler::ComponentInstance::set_global_property, 3))?;
     component_instance_class.define_method("render", method!(compiler::ComponentInstance::render, 0))?;
+    component_instance_class.define_method("r_invoke", method!(compiler::ComponentInstance::invoke, 2))?;
+
     Ok(())
 }

@@ -417,6 +417,23 @@ impl ComponentInstance {
         }
     }
 
+    pub fn invoke(ruby: &Ruby, rb_self: &Self, name: String, args: magnus::RArray) -> RbResult<magnus::Value> {
+        rb_self.with(|inner| {
+            let cb_args: Vec<slint_interpreter::Value> = args
+                .into_iter()
+                .map(|arg| magnus::RString::from_value(arg).unwrap())
+                .map(|arg| arg.to_string().unwrap())
+                .map(|arg| Value::String(arg.into()))
+                .collect();
+
+            let cb_output = inner
+                .invoke(&name, &cb_args)
+                .map_err(|e| SlintError::new_err(e.to_string()))?;
+            
+            Self::try_slint_value_into_ruby_value(ruby, &cb_output)
+        })
+    }
+
     pub fn render(&self) {
         self.with(|inner| inner.run().unwrap())
     }

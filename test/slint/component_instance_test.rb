@@ -59,6 +59,12 @@ module Slint
       assert_raises(Slint::Error) { @component_instance.set_global_property("NonExistent", "my_global_property", 10) }
     end
 
+    # def test_invoke_callback
+    #   assert_equal("Hello World!", @component_instance.invoke("test-callback", "World!"))
+    #   assert_raises(Slint::Error, @component_instance.invoke("test-callback"))
+    #   assert_equal("Hello World!", @component_instance.invoke("test-callback", "World!", "Bu"))
+    # end
+
     private
 
     def source
@@ -71,14 +77,30 @@ module Slint
           in-out property <color> global_col_prop: #ffaaff;
         }
 
+        export struct MyStruct {
+          title: string,
+          finished: bool,
+          dash-prop: bool,
+        }
+
         export component App inherits Window {
           in-out property <int> int_property: 42;
           in-out property <float> float_prop: 110;
           in-out property <string> text_prop: "test-string-value";
           in-out property <bool> bool_prop: true;
           in-out property <color> col_prop: #ffaaff;
+          in-out property <MyStruct> struct_prop: {
+            title: "builtin",
+            finished: true,
+            dash-prop: true,
+          };
           // to be implemented
           // in-out property <image> some_image: @image-url("")
+
+          callback test-callback(string) -> string;
+          test-callback(value) => {
+            return "Hello " + value;
+          }
         }
       SLINT
     end
