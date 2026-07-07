@@ -52,5 +52,6 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     component_instance_class.define_method("render", method!(compiler::ComponentInstance::render, 0))?;
 
     let brush_class = module.define_class("Brush", ruby.class_object())?;
+    brush_class.define_method("transparent?", method!(compiler::Brush::is_transparent, 0))?;
     Ok(())
 }

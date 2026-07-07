@@ -168,6 +168,16 @@ impl From<slint_interpreter::Brush> for Brush {
     }
 }
 
+impl Brush {
+    fn with<R>(&self, f: impl FnOnce(&slint_interpreter::Brush) -> R) -> R {
+        self.brush.with(f)
+    }
+
+    pub fn is_transparent(&self) -> bool {
+        self.with(|inner| inner.is_transparent())
+    }
+}
+
 impl Diagnostic {
     fn with<R>(&self, f: impl FnOnce(&slint_interpreter::Diagnostic) -> R) -> R {
         self.diagnostic.with(f)
