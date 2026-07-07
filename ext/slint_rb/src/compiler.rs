@@ -155,6 +155,33 @@ pub struct Diagnostic {
     diagnostic: SendableWrapper<slint_interpreter::Diagnostic>
 }
 
+#[magnus::wrap(class = "Slint::Color")]
+pub struct Color {
+    color: slint_interpreter::Color
+}
+
+impl Color {
+    pub fn new() -> Self {
+        Self { color: Default::default() }
+    }
+
+    pub fn red(&self) -> u8 {
+        self.color.red()
+    }
+
+    pub fn green(&self) -> u8 {
+        self.color.green()
+    }
+
+    pub fn blue(&self) -> u8 {
+        self.color.blue()
+    }
+
+    pub fn alpha(&self) -> u8 {
+        self.color.alpha()
+    }
+}
+
 #[magnus::wrap(class = "Slint::Brush")]
 pub struct Brush {
     brush: SendableWrapper<slint_interpreter::Brush>
