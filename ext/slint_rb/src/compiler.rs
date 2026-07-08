@@ -162,14 +162,24 @@ pub struct Color {
 
 impl Color {
     pub fn new(maybe_input: &[magnus::Value]) -> RbResult<Self> {
-        let args = scan_args::scan_args::<(), (), (), (), magnus::RHash, ()>(maybe_input)?;
+        let args = scan_args::scan_args::<(), (Option<String>,), (), (), magnus::RHash, ()>(maybe_input)?;
+        let (color_string,) = args.optional;
         let kwargs = scan_args::get_kwargs::<_, (), (Option<u8>, Option<u8>, Option<u8>, Option<u8>), ()>(args.keywords, &[], &["red", "green", "blue", "alpha"])?;
 
-        match kwargs.optional {
-            (None, None, None, None) => Ok(Self { color: Default::default() }),
-            (Some(red), Some(green), Some(blue), None) => Ok(Self { color: slint_interpreter::Color::from_rgb_u8(red, green, blue) }),
-            (Some(red), Some(green), Some(blue), Some(alpha)) => Ok(Self { color: slint_interpreter::Color::from_argb_u8(alpha, red, green, blue) }),
-            _ => Err(SlintError::new_err("Insufficient number of arguments".to_string()))
+        let (red, green, blue, alpha) = kwargs.optional;
+
+        match (color_string, red, green, blue, alpha) {
+            (None, None, None, None, None) => Ok(Self { color: Default::default() }),
+            (None, Some(red), Some(green), Some(blue), None) => Ok(Self { color: slint_interpreter::Color::from_rgb_u8(red, green, blue) }),
+            (None, Some(red), Some(green), Some(blue), Some(alpha)) => Ok(Self { color: slint_interpreter::Color::from_argb_u8(alpha, red, green, blue) }),
+            (Some(hex), None, None, None, None) => {
+                hex
+                    .parse::<css_color_parser2::Color>()
+                    .map(|c| Self { color: slint_interpreter::Color::from_argb_u8((c.a * 255.) as u8, c.r, c.g, c.b) })
+                    .map_err(|err| SlintError::new_err(err.to_string()))
+            },
+            (None, ..) => Err(SlintError::new_err("Invalid keyword arguments. Expected red, green, and blue (with optional alpha).".to_string())),
+            _ => Err(SlintError::new_err("Provide either a hex string or RGB(A) keywords, not both.".to_string()))
         }
     }
 
