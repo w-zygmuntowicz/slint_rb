@@ -55,7 +55,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     brush_class.define_method("transparent?", method!(compiler::Brush::is_transparent, 0))?;
 
     let color_class = module.define_class("Color", ruby.class_object())?;
-    color_class.define_singleton_method("new", function!(compiler::Color::new, 0))?;
+    color_class.define_singleton_method("new", function!(compiler::Color::new, -1))?;
     color_class.define_method("red", method!(compiler::Color::red, 0))?;
     color_class.define_method("green", method!(compiler::Color::green, 0))?;
     color_class.define_method("blue", method!(compiler::Color::blue, 0))?;

@@ -1,5 +1,5 @@
 use magnus::prelude::*;
-use magnus::{Module, RArray, Ruby};
+use magnus::{scan_args, Module, RArray, Ruby};
 use slint_interpreter::{ComponentHandle};
 use slint_interpreter::Value;
 use std::collections::HashMap;
@@ -161,8 +161,15 @@ pub struct Color {
 }
 
 impl Color {
-    pub fn new() -> Self {
-        Self { color: Default::default() }
+    pub fn new(maybe_input: &[magnus::Value]) -> RbResult<Self> {
+        let args = scan_args::scan_args::<(), (), (), (), magnus::RHash, ()>(maybe_input)?;
+        let kwargs = scan_args::get_kwargs::<_, (), (Option<u8>, Option<u8>, Option<u8>), ()>(args.keywords, &[], &["red", "green", "blue"])?;
+
+        match kwargs.optional {
+            (None, None, None) => Ok(Self { color: Default::default() }),
+            (Some(red), Some(green), Some(blue)) => Ok(Self { color: slint_interpreter::Color::from_rgb_u8(red, green, blue) }),
+            _ => Err(SlintError::new_err("Insufficient number of arguments".to_string()))
+        }
     }
 
     pub fn red(&self) -> u8 {
