@@ -21,5 +21,14 @@ module Slint
       assert_equal(0x56, col.blue)
       assert_equal(255, col.alpha)
     end
+
+    def test_col_from_rgba
+      col = Color.new(red: 0x12, green: 0x34, blue: 0x56, alpha: 128)
+
+      assert_equal(0x12, col.red)
+      assert_equal(0x34, col.green)
+      assert_equal(0x56, col.blue)
+      assert_equal(128, col.alpha)
+    end
   end
 end
