@@ -3,6 +3,7 @@ use magnus::{scan_args, Module, RArray, Ruby};
 use slint_interpreter::{ComponentHandle};
 use slint_interpreter::Value;
 use std::collections::HashMap;
+use std::fmt;
 use std::path::{Path, PathBuf};
 
 use crate::sendable_wrapper::SendableWrapper;
@@ -158,6 +159,12 @@ pub struct Diagnostic {
 #[magnus::wrap(class = "Slint::Color")]
 pub struct Color {
     color: slint_interpreter::Color
+}
+
+impl fmt::Display for Color {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.color.to_string())
+    }
 }
 
 impl Color {

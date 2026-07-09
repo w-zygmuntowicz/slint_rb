@@ -20,7 +20,7 @@ module Slint
       assert_equal(0x34, col.green)
       assert_equal(0x56, col.blue)
       assert_equal(255, col.alpha)
-      # assert_equal("argb(255, 18, 52, 86)", col.to_s)
+      assert_equal("argb(255, 18, 52, 86)", col.to_s)
     end
 
     def test_rgb_color_constructor

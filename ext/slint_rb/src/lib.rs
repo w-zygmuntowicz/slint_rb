@@ -60,5 +60,6 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     color_class.define_method("green", method!(compiler::Color::green, 0))?;
     color_class.define_method("blue", method!(compiler::Color::blue, 0))?;
     color_class.define_method("alpha", method!(compiler::Color::alpha, 0))?;
+    color_class.define_method("to_s", method!(compiler::Color::to_string, 0))?;
     Ok(())
 }
