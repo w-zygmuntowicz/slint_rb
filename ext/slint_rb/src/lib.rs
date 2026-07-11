@@ -1,4 +1,4 @@
-use magnus::{function, method, prelude::*, Error, Ruby};
+use magnus::{Error, Ruby, function, method, prelude::*, typed_data};
 
 mod compiler;
 mod sendable_wrapper;
@@ -61,5 +61,12 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     color_class.define_method("blue", method!(compiler::Color::blue, 0))?;
     color_class.define_method("alpha", method!(compiler::Color::alpha, 0))?;
     color_class.define_method("to_s", method!(compiler::Color::to_string, 0))?;
+    color_class.define_method("transparentize", method!(compiler::Color::transparentize, 1))?;
+    // color_class.define_method("==", method!(compiler::Color::eq, 1))?;
+    // <=> sort operator based on Rust PartialOrd impl
+    color_class.define_method("<=>", method!(<compiler::Color as typed_data::Cmp>::cmp, 1))?;
+    // defines <, <=, >, >=, and == based on <=>
+    color_class.include_module(ruby.module_comparable())?;
+
     Ok(())
 }

@@ -40,5 +40,18 @@ module Slint
       assert_equal(0x56, col.blue)
       assert_equal(128, col.alpha)
     end
+
+    def test_comparison
+      col1 = Color.new(red: 0x12, green: 0x34, blue: 0x56)
+      col2 = Color.new(red: 0x12, green: 0x34, blue: 0x56)
+
+      assert_equal(col1, col2)
+    end
+
+    def test_transparentize
+      red = Color.new(alpha: 200, red: 255, green: 0, blue: 0)
+
+      assert_equal(red.transparentize(0.5), Color.new(alpha: 100, red: 255, green: 0, blue: 0))
+    end
   end
 end

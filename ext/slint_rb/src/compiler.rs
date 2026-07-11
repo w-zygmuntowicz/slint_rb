@@ -157,6 +157,7 @@ pub struct Diagnostic {
 }
 
 #[magnus::wrap(class = "Slint::Color")]
+#[derive(Default, PartialEq, PartialOrd)]
 pub struct Color {
     color: slint_interpreter::Color
 }
@@ -176,7 +177,7 @@ impl Color {
         let (red, green, blue, alpha) = kwargs.optional;
 
         match (color_string, red, green, blue, alpha) {
-            (None, None, None, None, None) => Ok(Self { color: Default::default() }),
+            (None, None, None, None, None) => Ok(Self::default()),
             (None, Some(red), Some(green), Some(blue), None) => Ok(Self { color: slint_interpreter::Color::from_rgb_u8(red, green, blue) }),
             (None, Some(red), Some(green), Some(blue), Some(alpha)) => Ok(Self { color: slint_interpreter::Color::from_argb_u8(alpha, red, green, blue) }),
             (Some(hex), None, None, None, None) => {
@@ -204,6 +205,10 @@ impl Color {
 
     pub fn alpha(&self) -> u8 {
         self.color.alpha()
+    }
+
+    pub fn transparentize(&self, factor: f32) -> Color {
+        Color { color: self.color.transparentize(factor) }
     }
 }
 
