@@ -1,9 +1,8 @@
 use magnus::prelude::*;
-use magnus::{scan_args, RArray, Ruby};
+use magnus::{RArray, Ruby};
 use slint_interpreter::{ComponentHandle};
 use slint_interpreter::Value;
 use std::collections::HashMap;
-use std::fmt;
 use std::path::{Path, PathBuf};
 
 use crate::errors::{RbResult, SlintError};

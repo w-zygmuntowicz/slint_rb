@@ -1,5 +1,6 @@
 use std::fmt;
-use magnus::scan_args;
+use magnus::prelude::*;
+use magnus::{function, method, typed_data, scan_args};
 
 use crate::errors::{RbResult, SlintError};
 
@@ -81,4 +82,26 @@ impl Color {
     pub fn with_alpha(&self, alpha: f32) -> Color {
         Color { color: self.color.with_alpha(alpha) }
     }
+}
+
+pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> Result<(), magnus::Error> {
+    let color_class = slint_module.define_class("Color", ruby.class_object())?;
+    color_class.define_singleton_method("new", function!(Color::new, -1))?;
+    color_class.define_method("red", method!(Color::red, 0))?;
+    color_class.define_method("green", method!(Color::green, 0))?;
+    color_class.define_method("blue", method!(Color::blue, 0))?;
+    color_class.define_method("alpha", method!(Color::alpha, 0))?;
+    color_class.define_method("transparentize", method!(Color::transparentize, 1))?;
+    color_class.define_method("brighter", method!(Color::brighter, 1))?;
+    color_class.define_method("darker", method!(Color::darker, 1))?;
+    color_class.define_method("mix", method!(Color::mix, 2))?;
+    color_class.define_method("with_alpha", method!(Color::with_alpha, 1))?;
+    color_class.define_method("to_s", method!(Color::to_string, 0))?;
+    color_class.define_method("inspect", method!(<Color as typed_data::Inspect>::inspect, 0),)?;
+    // <=> sort operator based on Rust PartialOrd impl
+    color_class.define_method("<=>", method!(<Color as typed_data::Cmp>::cmp, 1))?;
+    // defines <, <=, >, >=, and == based on <=>
+    color_class.include_module(ruby.module_comparable())?;
+
+    Ok(())
 }
