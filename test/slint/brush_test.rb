@@ -110,8 +110,11 @@ module Slint
       assert_equal(maroon.brighter(0.2), maroon_brush.brighter(0.2).color)
     end
 
-    def test_brush_darker
-      skip "TBD"
+    def test_brush_darker_calls_darker_on_its_colors
+      maroon = Color.new(red: 128, green: 0, blue: 0)
+      maroon_brush = Brush.solid(maroon)
+
+      assert_equal(maroon.darker(0.2), maroon_brush.darker(0.2).color)
     end
 
     def test_brush_transparentize
