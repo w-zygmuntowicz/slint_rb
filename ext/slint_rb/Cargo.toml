@@ -10,6 +10,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
+css-color-parser2 = "1.0.1"
 i-slint-backend-selector = "1.17.0"
 i-slint-compiler = "1.17.0"
 i-slint-core = "1.17.0"
