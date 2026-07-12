@@ -133,6 +133,10 @@ impl Brush {
     pub fn transparentize(&self, amount: f32) -> Self {
         self.brush.transparentize(amount).into()
     }
+
+    pub fn with_alpha(&self, alpha: f32) -> Self {
+        self.brush.with_alpha(alpha).into()
+    }
 }
 
 pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> RbResult<()> {
@@ -162,6 +166,7 @@ pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> RbResult<()>
     brush_class.define_method("brighter", method!(Brush::brighter, 1))?;
     brush_class.define_method("darker", method!(Brush::darker, 1))?;
     brush_class.define_method("transparentize", method!(Brush::transparentize, 1))?;
+    brush_class.define_method("with_alpha", method!(Brush::with_alpha, 1))?;
 
     Ok(())
 }

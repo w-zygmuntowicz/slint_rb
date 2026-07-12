@@ -124,8 +124,11 @@ module Slint
       assert_equal(maroon.transparentize(0.2), maroon_brush.transparentize(0.2).color)
     end
 
-    def test_brush_with_alpha
-      skip "TBD"
+    def test_brush_with_alpha_sets_alpha_on_its_colors
+      maroon = Color.new(red: 128, green: 0, blue: 0)
+      maroon_brush = Brush.solid(maroon)
+
+      assert_equal(maroon.with_alpha(0.2), maroon_brush.with_alpha(0.2).color)
     end
   end
 end
