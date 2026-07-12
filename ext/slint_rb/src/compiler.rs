@@ -402,6 +402,23 @@ impl ComponentInstance {
         }
     }
 
+    pub fn invoke(ruby: &Ruby, rb_self: &Self, name: String, args: magnus::RArray) -> RbResult<magnus::Value> {
+        rb_self.with(|inner| {
+            let cb_args: Vec<slint_interpreter::Value> = args
+                .into_iter()
+                .map(|arg| magnus::RString::from_value(arg).unwrap())
+                .map(|arg| arg.to_string().unwrap())
+                .map(|arg| Value::String(arg.into()))
+                .collect();
+
+            let cb_output = inner
+                .invoke(&name, &cb_args)
+                .map_err(|e| SlintError::new_err(e.to_string()))?;
+            
+            Self::try_slint_value_into_ruby_value(ruby, &cb_output)
+        })
+    }
+
     pub fn render(&self) {
         self.with(|inner| inner.run().unwrap())
     }
@@ -451,6 +468,7 @@ pub fn init(ruby: &Ruby, slint_module: &RModule) -> RbResult<()> {
     component_instance_class.define_method("get_global_property", method!(ComponentInstance::get_global_property, 2))?;
     component_instance_class.define_method("set_global_property", method!(ComponentInstance::set_global_property, 3))?;
     component_instance_class.define_method("render", method!(ComponentInstance::render, 0))?;
+    component_instance_class.define_method("r_invoke", method!(ComponentInstance::invoke, 2))?;
 
     Ok(())
 }
