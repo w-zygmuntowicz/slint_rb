@@ -79,5 +79,12 @@ module Slint
 
       assert_equal(Color.new(alpha: 127, red: 255, green: 0, blue: 0), red.with_alpha(0.5))
     end
+
+    def test_brush_from_color
+      red = Color.new(red: 255, green: 0, blue: 0)
+      brush = Brush.solid(red)
+
+      assert_equal(red, brush.color)
+    end
   end
 end
