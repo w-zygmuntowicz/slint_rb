@@ -17,25 +17,29 @@ module Slint
     end
 
     def test_property_accessor # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
-      assert_equal(42, @component_instance.get_property("int_property"))
-      assert_in_delta(110.0, @component_instance.get_property("float_prop"))
       assert_equal("test-string-value", @component_instance.get_property("text_prop"))
+      @component_instance.set_property("text_prop", "new-string")
+      assert_equal("new-string", @component_instance.get_property("text_prop"))
+      assert_raises(TypeError) { @component_instance.set_property("text_prop", 42) }
+
+      assert_equal(42, @component_instance.get_property("int_property"))
+      @component_instance.set_property("int_property", 10)
+      assert_equal(10, @component_instance.get_property("int_property"))
+      assert_raises(TypeError) { @component_instance.set_property("int_property", false) }
+
+      assert_in_delta(110.0, @component_instance.get_property("float_prop"))
+      @component_instance.set_property("float_prop", 10.5)
+      assert_in_delta(10.5, @component_instance.get_property("float_prop"))
+      assert_raises(TypeError) { @component_instance.set_property("float_prop", "Blah") }
+
       assert(@component_instance.get_property("bool_prop"))
+      @component_instance.set_property("bool_prop", false)
+      refute(@component_instance.get_property("bool_prop"))
+      # Does not raise?
+      # assert_raises(TypeError) { @component_instance.set_property("bool_prop", "120") }
 
       col_prop = @component_instance.get_property("col_prop")
-
       assert_instance_of(Brush, col_prop)
-
-      @component_instance.set_property("int_property", 10)
-      @component_instance.set_property("float_prop", 10.5)
-      @component_instance.set_property("text_prop", "new-string")
-      @component_instance.set_property("bool_prop", false)
-
-      assert_equal(10, @component_instance.get_property("int_property"))
-      assert_in_delta(10.5, @component_instance.get_property("float_prop"))
-      assert_equal("new-string", @component_instance.get_property("text_prop"))
-      refute(@component_instance.get_property("bool_prop"))
-
       # TODO: until Image is implemented
       # assert_equal(some_image, component_instance.get_property("some_image"))
       assert_raises(Slint::Error) { @component_instance.get_property("non-existent") }
