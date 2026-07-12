@@ -468,6 +468,7 @@ pub fn init(ruby: &Ruby, slint_module: &RModule) -> RbResult<()> {
     component_instance_class.define_method("get_global_property", method!(ComponentInstance::get_global_property, 2))?;
     component_instance_class.define_method("set_global_property", method!(ComponentInstance::set_global_property, 3))?;
     component_instance_class.define_method("render", method!(ComponentInstance::render, 0))?;
+    component_instance_class.define_method("r_invoke", method!(ComponentInstance::invoke, 2))?;
 
     Ok(())
 }
