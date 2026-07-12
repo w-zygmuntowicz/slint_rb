@@ -60,11 +60,13 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     color_class.define_method("green", method!(compiler::Color::green, 0))?;
     color_class.define_method("blue", method!(compiler::Color::blue, 0))?;
     color_class.define_method("alpha", method!(compiler::Color::alpha, 0))?;
-    color_class.define_method("to_s", method!(compiler::Color::to_string, 0))?;
     color_class.define_method("transparentize", method!(compiler::Color::transparentize, 1))?;
     color_class.define_method("brighter", method!(compiler::Color::brighter, 1))?;
     color_class.define_method("darker", method!(compiler::Color::darker, 1))?;
     color_class.define_method("mix", method!(compiler::Color::mix, 2))?;
+    color_class.define_method("with_alpha", method!(compiler::Color::with_alpha, 1))?;
+    color_class.define_method("to_s", method!(compiler::Color::to_string, 0))?;
+    color_class.define_method("inspect", method!(<compiler::Color as typed_data::Inspect>::inspect, 0),)?;
     // <=> sort operator based on Rust PartialOrd impl
     color_class.define_method("<=>", method!(<compiler::Color as typed_data::Cmp>::cmp, 1))?;
     // defines <, <=, >, >=, and == based on <=>

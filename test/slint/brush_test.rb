@@ -73,5 +73,11 @@ module Slint
 
       assert_equal(Color.new(red: 100, green: 0, blue: 0), reddish.darker(0.3))
     end
+
+    def test_with_alpha
+      red = Color.new(red: 255, green: 0, blue: 0)
+
+      assert_equal(Color.new(alpha: 127, red: 255, green: 0, blue: 0), red.with_alpha(0.5))
+    end
   end
 end

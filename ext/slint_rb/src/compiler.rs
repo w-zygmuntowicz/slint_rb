@@ -157,7 +157,7 @@ pub struct Diagnostic {
 }
 
 #[magnus::wrap(class = "Slint::Color")]
-#[derive(Default, PartialEq, PartialOrd)]
+#[derive(Default, Debug, PartialEq, PartialOrd)]
 pub struct Color {
     color: slint_interpreter::Color
 }
@@ -229,6 +229,10 @@ impl Color {
 
     pub fn mix(&self, other: &Color, factor: f32) -> Color {
         Color { color: self.color.mix(&other.color, factor) }
+    }
+
+    pub fn with_alpha(&self, alpha: f32) -> Color {
+        Color { color: self.color.with_alpha(alpha) }
     }
 }
 
