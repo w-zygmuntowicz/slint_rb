@@ -350,6 +350,11 @@ impl ComponentInstance {
                 let val = bool::try_convert(value)?;
                 Ok(Value::Bool(val))
             }
+            Value::Brush(slint_interpreter::Brush::SolidColor(_)) => {
+                let brush = <&Brush>::try_convert(value)?;
+
+                Ok(Value::Brush(brush.into()))
+            }
             _ => Err(SlintError::new_err(format!(
                 "Setting property of type {:?} is not supported yet",
                 old_value

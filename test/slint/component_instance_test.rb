@@ -38,6 +38,12 @@ module Slint
       # Does not raise?
       # assert_raises(TypeError) { @component_instance.set_property("bool_prop", "120") }
 
+      brushval = @component_instance.get_property("brush_prop")
+      assert_equal("argb(255, 255, 0, 255)", brushval.color.to_s)
+      @component_instance.set_property("brush_prop", Brush.solid(Color.new(red: 128, green: 128, blue: 128)))
+      brushval = @component_instance.get_property("brush_prop")
+      assert_equal("argb(255, 128, 128, 128)", brushval.color.to_s)
+
       col_prop = @component_instance.get_property("col_prop")
       assert_instance_of(Brush, col_prop)
       # TODO: until Image is implemented
@@ -84,6 +90,7 @@ module Slint
           in-out property <float> float_prop: 110;
           in-out property <string> text_prop: "test-string-value";
           in-out property <bool> bool_prop: true;
+          in-out property <brush> brush_prop: Colors.rgb(255, 0, 255);
           in-out property <color> col_prop: #ffaaff;
           // to be implemented
           // in-out property <image> some_image: @image-url("")

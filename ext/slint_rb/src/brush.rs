@@ -117,6 +117,12 @@ impl From<slint_interpreter::Brush> for Brush {
     }
 }
 
+impl From<&Brush> for slint_interpreter::Brush {
+    fn from(value: &Brush) -> Self {
+        value.brush.clone()
+    }
+}
+
 impl Brush {
     pub fn solid(color: &Color) -> Self {
         slint_interpreter::Brush::SolidColor(color.color).into()
