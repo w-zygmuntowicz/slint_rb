@@ -1,6 +1,7 @@
 use magnus::{Error, Ruby, function, method, prelude::*, typed_data};
 
 mod compiler;
+mod brush;
 mod sendable_wrapper;
 mod errors;
 
@@ -56,20 +57,20 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     brush_class.define_method("transparent?", method!(compiler::Brush::is_transparent, 0))?;
 
     let color_class = module.define_class("Color", ruby.class_object())?;
-    color_class.define_singleton_method("new", function!(compiler::Color::new, -1))?;
-    color_class.define_method("red", method!(compiler::Color::red, 0))?;
-    color_class.define_method("green", method!(compiler::Color::green, 0))?;
-    color_class.define_method("blue", method!(compiler::Color::blue, 0))?;
-    color_class.define_method("alpha", method!(compiler::Color::alpha, 0))?;
-    color_class.define_method("transparentize", method!(compiler::Color::transparentize, 1))?;
-    color_class.define_method("brighter", method!(compiler::Color::brighter, 1))?;
-    color_class.define_method("darker", method!(compiler::Color::darker, 1))?;
-    color_class.define_method("mix", method!(compiler::Color::mix, 2))?;
-    color_class.define_method("with_alpha", method!(compiler::Color::with_alpha, 1))?;
-    color_class.define_method("to_s", method!(compiler::Color::to_string, 0))?;
-    color_class.define_method("inspect", method!(<compiler::Color as typed_data::Inspect>::inspect, 0),)?;
+    color_class.define_singleton_method("new", function!(brush::Color::new, -1))?;
+    color_class.define_method("red", method!(brush::Color::red, 0))?;
+    color_class.define_method("green", method!(brush::Color::green, 0))?;
+    color_class.define_method("blue", method!(brush::Color::blue, 0))?;
+    color_class.define_method("alpha", method!(brush::Color::alpha, 0))?;
+    color_class.define_method("transparentize", method!(brush::Color::transparentize, 1))?;
+    color_class.define_method("brighter", method!(brush::Color::brighter, 1))?;
+    color_class.define_method("darker", method!(brush::Color::darker, 1))?;
+    color_class.define_method("mix", method!(brush::Color::mix, 2))?;
+    color_class.define_method("with_alpha", method!(brush::Color::with_alpha, 1))?;
+    color_class.define_method("to_s", method!(brush::Color::to_string, 0))?;
+    color_class.define_method("inspect", method!(<brush::Color as typed_data::Inspect>::inspect, 0),)?;
     // <=> sort operator based on Rust PartialOrd impl
-    color_class.define_method("<=>", method!(<compiler::Color as typed_data::Cmp>::cmp, 1))?;
+    color_class.define_method("<=>", method!(<brush::Color as typed_data::Cmp>::cmp, 1))?;
     // defines <, <=, >, >=, and == based on <=>
     color_class.include_module(ruby.module_comparable())?;
 
