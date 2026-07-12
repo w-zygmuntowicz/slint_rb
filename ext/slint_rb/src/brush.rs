@@ -3,6 +3,7 @@ use magnus::prelude::*;
 use magnus::{function, method, typed_data, scan_args};
 
 use crate::errors::{RbResult, SlintError};
+use crate::sendable_wrapper::SendableWrapper;
 
 #[magnus::wrap(class = "Slint::Color")]
 #[derive(Default, Debug, PartialEq, PartialOrd)]
@@ -84,6 +85,29 @@ impl Color {
     }
 }
 
+#[magnus::wrap(class = "Slint::Brush")]
+pub struct Brush {
+    brush: SendableWrapper<slint_interpreter::Brush>
+}
+
+impl From<slint_interpreter::Brush> for Brush {
+    fn from(brush: slint_interpreter::Brush) -> Self {
+        Self {
+            brush: SendableWrapper::new(brush)
+        }
+    }
+}
+
+impl Brush {
+    fn with<R>(&self, f: impl FnOnce(&slint_interpreter::Brush) -> R) -> R {
+        self.brush.with(f)
+    }
+
+    pub fn is_transparent(&self) -> bool {
+        self.with(|inner| inner.is_transparent())
+    }
+}
+
 pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> RbResult<()> {
     let color_class = slint_module.define_class("Color", ruby.class_object())?;
     color_class.define_singleton_method("new", function!(Color::new, -1))?;
@@ -102,6 +126,9 @@ pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> RbResult<()>
     color_class.define_method("<=>", method!(<Color as typed_data::Cmp>::cmp, 1))?;
     // defines <, <=, >, >=, and == based on <=>
     color_class.include_module(ruby.module_comparable())?;
+
+    let brush_class = slint_module.define_class("Brush", ruby.class_object())?;
+    brush_class.define_method("transparent?", method!(Brush::is_transparent, 0))?;
 
     Ok(())
 }

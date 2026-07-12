@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use crate::errors::{RbResult, SlintError};
 use crate::sendable_wrapper::SendableWrapper;
+use crate::brush::Brush;
 
 #[magnus::wrap(class = "Slint::Compiler")]
 pub struct Compiler {
@@ -136,29 +137,6 @@ impl CompilationResult {
 #[magnus::wrap(class = "Slint::Diagnostic")]
 pub struct Diagnostic {
     diagnostic: SendableWrapper<slint_interpreter::Diagnostic>
-}
-
-#[magnus::wrap(class = "Slint::Brush")]
-pub struct Brush {
-    brush: SendableWrapper<slint_interpreter::Brush>
-}
-
-impl From<slint_interpreter::Brush> for Brush {
-    fn from(brush: slint_interpreter::Brush) -> Self {
-        Self {
-            brush: SendableWrapper::new(brush)
-        }
-    }
-}
-
-impl Brush {
-    fn with<R>(&self, f: impl FnOnce(&slint_interpreter::Brush) -> R) -> R {
-        self.brush.with(f)
-    }
-
-    pub fn is_transparent(&self) -> bool {
-        self.with(|inner| inner.is_transparent())
-    }
 }
 
 impl Diagnostic {

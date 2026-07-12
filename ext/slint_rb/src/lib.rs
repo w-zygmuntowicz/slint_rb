@@ -1,16 +1,15 @@
-use magnus::{Error, Ruby, function, method, prelude::*};
+use magnus::{Ruby};
 
 mod compiler;
 mod brush;
 mod sendable_wrapper;
 mod errors;
 
-#[magnus::init]
-fn init(ruby: &Ruby) -> Result<(), Error> {
-    let module = ruby.define_module("Slint")?;
+use crate::errors::RbResult;
 
-    let brush_class = module.define_class("Brush", ruby.class_object())?;
-    brush_class.define_method("transparent?", method!(compiler::Brush::is_transparent, 0))?;
+#[magnus::init]
+fn init(ruby: &Ruby) -> RbResult<()> {
+    let module = ruby.define_module("Slint")?;
 
     compiler::init(ruby, &module)?;
     brush::init(ruby, &module)?;
