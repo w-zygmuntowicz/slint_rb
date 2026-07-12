@@ -1,30 +1,13 @@
 use magnus::prelude::*;
-use magnus::{scan_args, Module, RArray, Ruby};
+use magnus::{scan_args, RArray, Ruby};
 use slint_interpreter::{ComponentHandle};
 use slint_interpreter::Value;
 use std::collections::HashMap;
 use std::fmt;
 use std::path::{Path, PathBuf};
 
+use crate::errors::{RbResult, SlintError};
 use crate::sendable_wrapper::SendableWrapper;
-
-type RbResult<T> = Result<T, magnus::Error>;
-
-struct SlintError {}
-
-impl SlintError {
-    fn new_err(msg: String) -> magnus::Error {
-        let class = Ruby::get()
-            .unwrap()
-            .class_object()
-            .const_get::<_, magnus::RModule>("Slint")
-            .unwrap()
-            .const_get("Error")
-            .unwrap();
-
-        magnus::Error::new(class, msg)
-    }
-}
 
 #[magnus::wrap(class = "Slint::Compiler")]
 pub struct Compiler {

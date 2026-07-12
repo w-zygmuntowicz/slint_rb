@@ -2,6 +2,7 @@ use magnus::{Error, Ruby, function, method, prelude::*, typed_data};
 
 mod compiler;
 mod sendable_wrapper;
+mod errors;
 
 #[magnus::init]
 fn init(ruby: &Ruby) -> Result<(), Error> {
