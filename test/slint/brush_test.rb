@@ -86,5 +86,13 @@ module Slint
 
       assert_equal(red, brush.color)
     end
+
+    def test_brush_transparent
+      transparent_red = Brush.solid(Color.new(alpha: 0, red: 255, green: 0, blue: 0))
+      solid_red = Brush.solid(Color.new(alpha: 255, red: 255, green: 0, blue: 0))
+
+      assert_predicate(transparent_red, :transparent?)
+      refute_predicate(solid_red, :transparent?)
+    end
   end
 end

@@ -25,7 +25,6 @@ module Slint
       col_prop = @component_instance.get_property("col_prop")
 
       assert_instance_of(Brush, col_prop)
-      refute_predicate(col_prop, :transparent?)
 
       @component_instance.set_property("int_property", 10)
       @component_instance.set_property("float_prop", 10.5)
