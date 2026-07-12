@@ -10,6 +10,14 @@ pub struct Color {
     color: slint_interpreter::Color
 }
 
+impl From<slint_interpreter::Color> for Color {
+    fn from(color: slint_interpreter::Color) -> Self {
+        Self {
+            color: color
+        }
+    }
+}
+
 impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.color.to_string())
@@ -40,11 +48,11 @@ impl Color {
     }
 
     fn from_rgb_u8(red: u8, green: u8, blue: u8) -> Self {
-        Self { color: slint_interpreter::Color::from_rgb_u8(red, green, blue) }
+        slint_interpreter::Color::from_rgb_u8(red, green, blue).into()
     }
 
     fn from_argb_u8(alpha: u8, red: u8, green: u8, blue: u8) -> Self {
-        Self { color: slint_interpreter::Color::from_argb_u8(alpha, red, green, blue) }
+        slint_interpreter::Color::from_argb_u8(alpha, red, green, blue).into()
     }
 
     pub fn red(&self) -> u8 {
@@ -64,23 +72,23 @@ impl Color {
     }
 
     pub fn transparentize(&self, factor: f32) -> Color {
-        Color { color: self.color.transparentize(factor) }
+        self.color.transparentize(factor).into()
     }
 
     pub fn brighter(&self, factor: f32) -> Color {
-        Color { color: self.color.brighter(factor) }
+        self.color.brighter(factor).into()
     }
 
     pub fn darker(&self, factor: f32) -> Color {
-        Color { color: self.color.darker(factor) }
+        self.color.darker(factor).into()
     }
 
     pub fn mix(&self, other: &Color, factor: f32) -> Color {
-        Color { color: self.color.mix(&other.color, factor) }
+        self.color.mix(&other.color, factor).into()
     }
 
     pub fn with_alpha(&self, alpha: f32) -> Color {
-        Color { color: self.color.with_alpha(alpha) }
+        self.color.with_alpha(alpha).into()
     }
 }
 
@@ -99,15 +107,11 @@ impl From<slint_interpreter::Brush> for Brush {
 
 impl Brush {
     pub fn solid(color: &Color) -> Self {
-        Self {
-            brush: slint_interpreter::Brush::SolidColor(color.color)
-        }
+        slint_interpreter::Brush::SolidColor(color.color).into()
     }
 
     pub fn color(&self) -> Color {
-        Color {
-            color: self.brush.color()
-        }
+        self.brush.color().into()
     }
 
     pub fn is_transparent(&self) -> bool {
@@ -116,6 +120,10 @@ impl Brush {
 
     pub fn is_opaque(&self) -> bool {
         self.brush.is_opaque()
+    }
+
+    pub fn brighter(&self, factor: f32) -> Self {
+        self.brush.brighter(factor).into()
     }
 }
 
@@ -143,6 +151,7 @@ pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> RbResult<()>
     brush_class.define_method("color", method!(Brush::color, 0))?;
     brush_class.define_method("transparent?", method!(Brush::is_transparent, 0))?;
     brush_class.define_method("opaque?", method!(Brush::is_opaque, 0))?;
+    brush_class.define_method("brighter", method!(Brush::brighter, 1))?;
 
     Ok(())
 }

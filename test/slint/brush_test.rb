@@ -102,5 +102,24 @@ module Slint
       refute_predicate(semi_transparent_red, :opaque?)
       assert_predicate(solid_red, :opaque?)
     end
+
+    def test_brush_brighter_calls_brighter_on_its_colors
+      maroon = Color.new(red: 128, green: 0, blue: 0)
+      maroon_brush = Brush.solid(maroon)
+
+      assert_equal(maroon.brighter(0.2), maroon_brush.brighter(0.2).color)
+    end
+
+    def test_brush_darker
+      skip "TBD"
+    end
+
+    def test_brush_transparentize
+      skip "TBD"
+    end
+
+    def test_brush_with_alpha
+      skip "TBD"
+    end
   end
 end
