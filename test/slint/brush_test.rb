@@ -49,83 +49,83 @@ module Slint
     end
 
     def test_transparentize
-      red = Color.new(alpha: 200, red: 255, green: 0, blue: 0)
+      red = Color.new(alpha: 200, red: 255)
 
-      assert_equal(red.transparentize(0.5), Color.new(alpha: 100, red: 255, green: 0, blue: 0))
+      assert_equal(red.transparentize(0.5), Color.new(alpha: 100, red: 255))
     end
 
     def test_mix
-      mostly_red = Color.new(red: 200, green: 0, blue: 0)
+      mostly_red = Color.new(red: 200)
       black = Color.new(red: 0, green: 0, blue: 0)
 
-      assert_equal(Color.new(red: 100, green: 0, blue: 0), mostly_red.mix(black, 0.5))
+      assert_equal(Color.new(red: 100), mostly_red.mix(black, 0.5))
     end
 
     def test_brighter_multiplies_hsv_value_by_one_plus_factor
-      maroonish = Color.new(red: 100, green: 0, blue: 0)
-      reddish = Color.new(red: 180, green: 0, blue: 0)
+      maroonish = Color.new(red: 100)
+      reddish = Color.new(red: 180)
 
       assert_equal(reddish, maroonish.brighter(0.8))
     end
 
     def test_darker_divides_hsv_value_by_one_plus_factor
-      reddish = Color.new(red: 130, green: 0, blue: 0)
+      reddish = Color.new(red: 130)
 
-      assert_equal(Color.new(red: 100, green: 0, blue: 0), reddish.darker(0.3))
+      assert_equal(Color.new(red: 100), reddish.darker(0.3))
     end
 
     def test_with_alpha
-      red = Color.new(red: 255, green: 0, blue: 0)
+      red = Color.new(red: 255)
 
-      assert_equal(Color.new(alpha: 127, red: 255, green: 0, blue: 0), red.with_alpha(0.5))
+      assert_equal(Color.new(alpha: 127, red: 255), red.with_alpha(0.5))
     end
 
     def test_brush_from_color
-      red = Color.new(red: 255, green: 0, blue: 0)
+      red = Color.new(red: 255)
       brush = Brush.solid(red)
 
       assert_equal(red, brush.color)
     end
 
     def test_brush_transparent
-      transparent_red = Brush.solid(Color.new(alpha: 0, red: 255, green: 0, blue: 0))
-      semi_transparent_red = Brush.solid(Color.new(alpha: 25, red: 255, green: 0, blue: 0))
+      transparent_red = Brush.solid(Color.new(alpha: 0, red: 255))
+      semi_transparent_red = Brush.solid(Color.new(alpha: 25, red: 255))
 
       assert_predicate(transparent_red, :transparent?)
       refute_predicate(semi_transparent_red, :transparent?)
     end
 
     def test_brush_opaque
-      semi_transparent_red = Brush.solid(Color.new(alpha: 25, red: 255, green: 0, blue: 0))
-      solid_red = Brush.solid(Color.new(alpha: 255, red: 255, green: 0, blue: 0))
+      semi_transparent_red = Brush.solid(Color.new(alpha: 25, red: 255))
+      solid_red = Brush.solid(Color.new(alpha: 255, red: 255))
 
       refute_predicate(semi_transparent_red, :opaque?)
       assert_predicate(solid_red, :opaque?)
     end
 
     def test_brush_brighter_calls_brighter_on_its_colors
-      maroon = Color.new(red: 128, green: 0, blue: 0)
+      maroon = Color.new(red: 128)
       maroon_brush = Brush.solid(maroon)
 
       assert_equal(maroon.brighter(0.2), maroon_brush.brighter(0.2).color)
     end
 
     def test_brush_darker_calls_darker_on_its_colors
-      maroon = Color.new(red: 128, green: 0, blue: 0)
+      maroon = Color.new(red: 128)
       maroon_brush = Brush.solid(maroon)
 
       assert_equal(maroon.darker(0.2), maroon_brush.darker(0.2).color)
     end
 
     def test_brush_transparentize_calls_transparentize_on_its_colors
-      maroon = Color.new(red: 128, green: 0, blue: 0)
+      maroon = Color.new(red: 128)
       maroon_brush = Brush.solid(maroon)
 
       assert_equal(maroon.transparentize(0.2), maroon_brush.transparentize(0.2).color)
     end
 
     def test_brush_with_alpha_sets_alpha_on_its_colors
-      maroon = Color.new(red: 128, green: 0, blue: 0)
+      maroon = Color.new(red: 128)
       maroon_brush = Brush.solid(maroon)
 
       assert_equal(maroon.with_alpha(0.2), maroon_brush.with_alpha(0.2).color)
