@@ -219,6 +219,10 @@ impl Color {
         Color { color: self.color.transparentize(factor) }
     }
 
+    pub fn brighter(&self, factor: f32) -> Color {
+        Color { color: self.color.brighter(factor) }
+    }
+
     pub fn mix(&self, other: &Color, factor: f32) -> Color {
         Color { color: self.color.mix(&other.color, factor) }
     }

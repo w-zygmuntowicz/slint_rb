@@ -62,6 +62,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     color_class.define_method("alpha", method!(compiler::Color::alpha, 0))?;
     color_class.define_method("to_s", method!(compiler::Color::to_string, 0))?;
     color_class.define_method("transparentize", method!(compiler::Color::transparentize, 1))?;
+    color_class.define_method("brighter", method!(compiler::Color::brighter, 1))?;
     color_class.define_method("mix", method!(compiler::Color::mix, 2))?;
     // <=> sort operator based on Rust PartialOrd impl
     color_class.define_method("<=>", method!(<compiler::Color as typed_data::Cmp>::cmp, 1))?;

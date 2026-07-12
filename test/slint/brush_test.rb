@@ -60,5 +60,12 @@ module Slint
 
       assert_equal(Color.new(red: 100, green: 0, blue: 0), mostly_red.mix(black, 0.5))
     end
+
+    def test_brighter
+      maroonish = Color.new(red: 100, green: 0, blue: 0)
+      reddish = Color.new(red: 150, green: 0, blue: 0)
+
+      assert_equal(reddish, maroonish.brighter(0.5))
+    end
   end
 end
