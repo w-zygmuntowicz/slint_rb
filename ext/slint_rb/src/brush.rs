@@ -84,7 +84,7 @@ impl Color {
     }
 }
 
-pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> Result<(), magnus::Error> {
+pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> RbResult<()> {
     let color_class = slint_module.define_class("Color", ruby.class_object())?;
     color_class.define_singleton_method("new", function!(Color::new, -1))?;
     color_class.define_method("red", method!(Color::red, 0))?;

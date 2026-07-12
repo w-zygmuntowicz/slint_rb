@@ -1,5 +1,5 @@
-use magnus::prelude::*;
-use magnus::{RArray, Ruby};
+use magnus::{RModule, prelude::*};
+use magnus::{RArray, Ruby, function, method};
 use slint_interpreter::{ComponentHandle};
 use slint_interpreter::Value;
 use std::collections::HashMap;
@@ -427,4 +427,52 @@ impl ComponentInstance {
     pub fn render(&self) {
         self.with(|inner| inner.run().unwrap())
     }
+}
+
+pub fn init(ruby: &Ruby, slint_module: &RModule) -> RbResult<()> {
+    let compiler_class = slint_module.define_class("Compiler", ruby.class_object())?;
+    compiler_class.define_singleton_method("new", function!(Compiler::new, 0))?;
+    compiler_class.define_method("build_from_path", method!(Compiler::build_from_path, 1))?;
+    compiler_class.define_method("build_from_source", method!(Compiler::build_from_source, 2))?;
+    compiler_class.define_method("include_paths", method!(Compiler::include_paths, 0))?;
+    compiler_class.define_method("include_paths=", method!(Compiler::set_include_paths, 1))?;
+    compiler_class.define_method("library_paths", method!(Compiler::library_paths, 0))?;
+    compiler_class.define_method("library_paths=", method!(Compiler::set_library_paths, 1))?;
+    compiler_class.define_method("style", method!(Compiler::style, 0))?;
+    compiler_class.define_method("style=", method!(Compiler::set_style, 1))?;
+
+    let compilation_result_class = slint_module.define_class("CompilationResult", ruby.class_object())?;
+    compilation_result_class.define_method("valid?", method!(CompilationResult::valid, 0))?;
+    compilation_result_class.define_method("diagnostics", method!(CompilationResult::diagnostics, 0))?;
+    compilation_result_class.define_method("component_names", method!(CompilationResult::component_names, 0))?;
+    compilation_result_class.define_method("components", method!(CompilationResult::components, 0))?;
+
+    let diagnostic_class = slint_module.define_class("Diagnostic", ruby.class_object())?;
+    diagnostic_class.define_method("message", method!(Diagnostic::message, 0))?;
+    diagnostic_class.define_method("line_column", method!(Diagnostic::line_column, 0))?;
+    diagnostic_class.define_method("level", method!(Diagnostic::level, 0))?;
+    diagnostic_class.define_method("source_file", method!(Diagnostic::source_file, 0))?;
+
+    let component_definition_class =
+        slint_module.define_class("ComponentDefinition", ruby.class_object())?;
+
+    component_definition_class.define_method("create", method!(ComponentDefinition::create, 0))?;
+    component_definition_class.define_method("name", method!(ComponentDefinition::name, 0))?;
+    component_definition_class.define_method("callbacks", method!(ComponentDefinition::callbacks, 0))?;
+    component_definition_class.define_method("functions", method!(ComponentDefinition::functions, 0))?;
+    component_definition_class.define_method("properties", method!(ComponentDefinition::properties, 0))?;
+    component_definition_class.define_method("globals", method!(ComponentDefinition::globals, 0))?;
+    component_definition_class.define_method("global_properties", method!(ComponentDefinition::global_properties, 1))?;
+    component_definition_class.define_method("global_callbacks", method!(ComponentDefinition::global_callbacks, 1))?;
+    component_definition_class.define_method("global_functions", method!(ComponentDefinition::global_functions, 1))?;
+
+    let component_instance_class = slint_module.define_class("ComponentInstance", ruby.class_object())?;
+    component_instance_class.define_method("definition", method!(ComponentInstance::definition, 0))?;
+    component_instance_class.define_method("get_property", method!(ComponentInstance::get_property, 1))?;
+    component_instance_class.define_method("set_property", method!(ComponentInstance::set_property, 2))?;
+    component_instance_class.define_method("get_global_property", method!(ComponentInstance::get_global_property, 2))?;
+    component_instance_class.define_method("set_global_property", method!(ComponentInstance::set_global_property, 3))?;
+    component_instance_class.define_method("render", method!(ComponentInstance::render, 0))?;
+
+    Ok(())
 }
