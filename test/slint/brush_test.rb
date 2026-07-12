@@ -53,5 +53,12 @@ module Slint
 
       assert_equal(red.transparentize(0.5), Color.new(alpha: 100, red: 255, green: 0, blue: 0))
     end
+
+    def test_mix
+      mostly_red = Color.new(red: 200, green: 0, blue: 0)
+      black = Color.new(red: 0, green: 0, blue: 0)
+
+      assert_equal(Color.new(red: 100, green: 0, blue: 0), mostly_red.mix(black, 0.5))
+    end
   end
 end

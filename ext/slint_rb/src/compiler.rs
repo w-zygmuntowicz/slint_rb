@@ -218,6 +218,10 @@ impl Color {
     pub fn transparentize(&self, factor: f32) -> Color {
         Color { color: self.color.transparentize(factor) }
     }
+
+    pub fn mix(&self, other: &Color, factor: f32) -> Color {
+        Color { color: self.color.mix(&other.color, factor) }
+    }
 }
 
 #[magnus::wrap(class = "Slint::Brush")]
