@@ -61,11 +61,17 @@ module Slint
       assert_equal(Color.new(red: 100, green: 0, blue: 0), mostly_red.mix(black, 0.5))
     end
 
-    def test_brighter
+    def test_brighter_multiplies_hsv_value_by_one_plus_factor
       maroonish = Color.new(red: 100, green: 0, blue: 0)
-      reddish = Color.new(red: 150, green: 0, blue: 0)
+      reddish = Color.new(red: 180, green: 0, blue: 0)
 
-      assert_equal(reddish, maroonish.brighter(0.5))
+      assert_equal(reddish, maroonish.brighter(0.8))
+    end
+
+    def test_darker_divides_hsv_value_by_one_plus_factor
+      reddish = Color.new(red: 130, green: 0, blue: 0)
+
+      assert_equal(Color.new(red: 100, green: 0, blue: 0), reddish.darker(0.3))
     end
   end
 end
