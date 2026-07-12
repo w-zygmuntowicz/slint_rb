@@ -89,10 +89,18 @@ module Slint
 
     def test_brush_transparent
       transparent_red = Brush.solid(Color.new(alpha: 0, red: 255, green: 0, blue: 0))
-      solid_red = Brush.solid(Color.new(alpha: 255, red: 255, green: 0, blue: 0))
+      semi_transparent_red = Brush.solid(Color.new(alpha: 25, red: 255, green: 0, blue: 0))
 
       assert_predicate(transparent_red, :transparent?)
-      refute_predicate(solid_red, :transparent?)
+      refute_predicate(semi_transparent_red, :transparent?)
+    end
+
+    def test_brush_opaque
+      semi_transparent_red = Brush.solid(Color.new(alpha: 25, red: 255, green: 0, blue: 0))
+      solid_red = Brush.solid(Color.new(alpha: 255, red: 255, green: 0, blue: 0))
+
+      refute_predicate(semi_transparent_red, :opaque?)
+      assert_predicate(solid_red, :opaque?)
     end
   end
 end

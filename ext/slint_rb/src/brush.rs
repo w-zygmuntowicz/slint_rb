@@ -113,6 +113,10 @@ impl Brush {
     pub fn is_transparent(&self) -> bool {
         self.brush.is_transparent()
     }
+
+    pub fn is_opaque(&self) -> bool {
+        self.brush.is_opaque()
+    }
 }
 
 pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> RbResult<()> {
@@ -138,6 +142,7 @@ pub fn init(ruby: &magnus::Ruby, slint_module: &magnus::RModule) -> RbResult<()>
     brush_class.define_singleton_method("solid", function!(Brush::solid, 1))?;
     brush_class.define_method("color", method!(Brush::color, 0))?;
     brush_class.define_method("transparent?", method!(Brush::is_transparent, 0))?;
+    brush_class.define_method("opaque?", method!(Brush::is_opaque, 0))?;
 
     Ok(())
 }
