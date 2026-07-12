@@ -51,7 +51,7 @@ module Slint
     def test_transparentize
       red = Color.new(alpha: 200, red: 255)
 
-      assert_equal(red.transparentize(0.5), Color.new(alpha: 100, red: 255))
+      assert_equal(Color.new(alpha: 100, red: 255), red.transparentize(0.5))
     end
 
     def test_mix
