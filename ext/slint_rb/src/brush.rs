@@ -83,23 +83,23 @@ impl Color {
         self.color.alpha()
     }
 
-    pub fn transparentize(&self, factor: f32) -> Color {
+    pub fn transparentize(&self, factor: f32) -> Self {
         self.color.transparentize(factor).into()
     }
 
-    pub fn brighter(&self, factor: f32) -> Color {
+    pub fn brighter(&self, factor: f32) -> Self {
         self.color.brighter(factor).into()
     }
 
-    pub fn darker(&self, factor: f32) -> Color {
+    pub fn darker(&self, factor: f32) -> Self {
         self.color.darker(factor).into()
     }
 
-    pub fn mix(&self, other: &Color, factor: f32) -> Color {
+    pub fn mix(&self, other: &Color, factor: f32) -> Self {
         self.color.mix(&other.color, factor).into()
     }
 
-    pub fn with_alpha(&self, alpha: f32) -> Color {
+    pub fn with_alpha(&self, alpha: f32) -> Self {
         self.color.with_alpha(alpha).into()
     }
 }
