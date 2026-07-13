@@ -44,8 +44,13 @@ module Slint
       brushval = @component_instance.get_property("brush_prop")
       assert_equal("argb(255, 128, 128, 128)", brushval.color.to_s)
 
-      col_prop = @component_instance.get_property("col_prop")
-      assert_instance_of(Brush, col_prop)
+      color_prop = @component_instance.get_property("color_prop")
+      assert_equal("argb(255, 0, 255, 0)", color_prop.color.to_s)
+      @component_instance.set_property("color_prop", Color.new(red: 128, green: 128, blue: 128))
+      color_prop = @component_instance.get_property("color_prop")
+      assert_equal("argb(255, 128, 128, 128)", color_prop.color.to_s)
+
+      assert_instance_of(Brush, color_prop)
       # TODO: until Image is implemented
       # assert_equal(some_image, component_instance.get_property("some_image"))
       assert_raises(Slint::Error) { @component_instance.get_property("non-existent") }
@@ -91,7 +96,7 @@ module Slint
           in-out property <string> text_prop: "test-string-value";
           in-out property <bool> bool_prop: true;
           in-out property <brush> brush_prop: Colors.rgb(255, 0, 255);
-          in-out property <color> col_prop: #ffaaff;
+          in-out property <color> color_prop: Colors.rgb(0, 255, 0);
           // to be implemented
           // in-out property <image> some_image: @image-url("")
         }

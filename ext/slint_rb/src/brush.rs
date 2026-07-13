@@ -12,9 +12,13 @@ pub struct Color {
 
 impl From<slint_interpreter::Color> for Color {
     fn from(color: slint_interpreter::Color) -> Self {
-        Self {
-            color: color
-        }
+        Self { color }
+    }
+}
+
+impl From<&Color> for slint_interpreter::Color {
+    fn from(value: &Color) -> Self {
+        value.color
     }
 }
 
@@ -112,9 +116,7 @@ pub struct Brush {
 
 impl From<slint_interpreter::Brush> for Brush {
     fn from(brush: slint_interpreter::Brush) -> Self {
-        Self {
-            brush: brush
-        }
+        Self { brush }
     }
 }
 

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use crate::errors::{RbResult, SlintError};
 use crate::sendable_wrapper::SendableWrapper;
-use crate::brush::Brush;
+use crate::brush::{Brush, Color};
 
 #[magnus::wrap(class = "Slint::Compiler")]
 pub struct Compiler {
@@ -351,9 +351,14 @@ impl ComponentInstance {
                 Ok(Value::Bool(val))
             }
             Value::Brush(slint_interpreter::Brush::SolidColor(_)) => {
-                let brush = <&Brush>::try_convert(value)?;
-
-                Ok(Value::Brush(brush.into()))
+                if let Ok(brush) = <&Brush>::try_convert(value) {
+                    Ok(Value::Brush(brush.into()))
+                } else if let Ok(color) = <&Color>::try_convert(value) {
+                    Ok(Value::Brush(slint_interpreter::Brush::SolidColor(color.into())))
+                } else {
+                    <&Brush>::try_convert(value)?;
+                    unreachable!()
+                }
             }
             _ => Err(SlintError::new_err(format!(
                 "Setting property of type {:?} is not supported yet",
