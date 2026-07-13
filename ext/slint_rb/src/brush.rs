@@ -55,7 +55,7 @@ impl Color {
                     .map(|c| Self::from_argb_u8((c.a * 255.) as u8, c.r, c.g, c.b) )
                     .map_err(|err| SlintError::new_err(err.to_string()))
             },
-            _ => Err(SlintError::new_err("Provide either a hex string or RGB(A) keywords, not both.".to_string()))
+            _ => Err(SlintError::new_err("Provide either a CSS color string or RGB(A) keywords, not both.".to_string()))
         }
     }
 
