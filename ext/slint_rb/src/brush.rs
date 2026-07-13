@@ -5,7 +5,7 @@ use magnus::{function, method, typed_data, scan_args};
 use crate::errors::{RbResult, SlintError};
 
 #[magnus::wrap(class = "Slint::Color")]
-#[derive(Default, Debug, PartialEq, PartialOrd)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Color {
     color: slint_interpreter::Color
 }
@@ -105,6 +105,7 @@ impl Color {
 }
 
 #[magnus::wrap(class = "Slint::Brush")]
+#[derive(Clone)]
 pub struct Brush {
     brush: slint_interpreter::Brush
 }
